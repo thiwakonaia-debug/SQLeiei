@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITDS 221 — Database Management Systems</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #2a3040;
+    --accent: #5b8cff;
+    --accent2: #ff6b6b;
+    --accent3: #54d68a;
+    --accent4: #ffd166;
+    --text: #e2e8f4;
+    --muted: #7a8499;
+    --tag-bg: rgba(91,140,255,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,140,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,140,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 60px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .course-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--tag-bg);
+    border: 1px solid rgba(91,140,255,0.3);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 42px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* ── NAV PILLS ── */
+  .nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 48px;
+    padding: 20px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .nav-pills a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .nav-pills a:hover {
+    color: var(--text);
+    background: var(--surface2);
+    border-color: var(--border);
+  }
+
+  /* ── SECTION ── */
+  .section {
+    margin-bottom: 56px;
+    scroll-margin-top: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--tag-bg);
+    border: 1px solid rgba(91,140,255,0.25);
+    border-radius: 4px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: rgba(91,140,255,0.4); }
+
+  .card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card p { color: #b0bace; font-size: 15px; }
+
+  /* ── DIKW TOWER ── */
+  .dikw-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+
+  .dikw-row {
+    display: flex;
+    align-items: stretch;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+
+  .dikw-row:hover { transform: translateX(4px); }
+
+  .dikw-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 14px 16px;
+    min-width: 110px;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+  }
+
+  .dikw-content {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--surface);
+    font-size: 14px;
+    color: #b0bace;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .dikw-content strong { color: var(--text); font-size: 15px; font-weight: 600; }
+  .dikw-content small { color: var(--muted); font-size: 13px; }
+
+  .row-data .dikw-label { background: rgba(84,214,138,0.15); color: var(--accent3); }
+  .row-info .dikw-label { background: rgba(91,140,255,0.15); color: var(--accent); }
+  .row-know .dikw-label { background: rgba(255,209,102,0.15); color: var(--accent4); }
+  .row-wis .dikw-label { background: rgba(255,107,107,0.15); color: var(--accent2); }
+
+  /* ── HIERARCHY STEPS ── */
+  .hierarchy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .hier-step {
+    flex: 1;
+    min-width: 80px;
+    padding: 16px 12px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+
+  .hier-step:last-child { border-right: none; }
+
+  .hier-step .icon { font-size: 22px; margin-bottom: 6px; }
+  .hier-step .label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 700; }
+  .hier-step .desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── COMPARE TABLE ── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .compare-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .compare-card .head {
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .compare-card.bad .head { background: rgba(255,107,107,0.12); color: var(--accent2); }
+  .compare-card.good .head { background: rgba(84,214,138,0.12); color: var(--accent3); }
+
+  .compare-card ul {
+    list-style: none;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .compare-card li {
+    font-size: 14px;
+    color: #b0bace;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .compare-card li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+
+  /* ── EXAM ALERT ── */
+  .exam-alert {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.3);
+    border-left: 4px solid var(--accent2);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #d4b0b0;
+  }
+
+  .exam-alert strong { color: var(--accent2); display: block; margin-bottom: 6px; font-size: 13px; font-family: 'Space Mono', monospace; }
+
+  /* ── FORMULA BOX ── */
+  .formula {
+    background: rgba(91,140,255,0.08);
+    border: 1px solid rgba(91,140,255,0.25);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  .formula .title { font-size: 11px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .formula .eq { font-size: 16px; color: #fff; margin-bottom: 4px; }
+  .formula .note { font-size: 12px; color: var(--muted); font-family: 'Sarabun', sans-serif; margin-top: 6px; }
+
+  /* ── CHEAT SHEET ── */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .cheat-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .cheat-item .key {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .cheat-item p { font-size: 13.5px; color: #b0bace; }
+
+  /* ── DB TYPES ── */
+  .db-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .type-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .type-card .icon { font-size: 28px; margin-bottom: 10px; }
+  .type-card .name { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 6px; }
+  .type-card .desc { font-size: 13px; color: var(--muted); }
+
+  /* ── MINDMAP ── */
+  .mindmap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .mm-root {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mm-branch { margin-bottom: 14px; }
+
+  .mm-branch-title {
+    font-weight: 700;
+    color: #fff;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .mm-branch-title::before { content: '▶'; font-size: 10px; color: var(--accent); }
+
+  .mm-items {
+    list-style: none;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mm-items li {
+    font-size: 13px;
+    color: #8a9ab8;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .mm-items li::before { content: '└─'; position: absolute; left: 0; color: var(--border); font-family: monospace; }
+
+  /* ── CAREER BLOCK ── */
+  .career-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .career-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .career-card .role { font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .career-card .salary { font-family: 'Space Mono', monospace; font-size: 18px; margin-bottom: 8px; }
+  .career-card p { font-size: 13px; color: var(--muted); }
+  .career-card.designer .salary { color: var(--accent3); }
+  .career-card.developer .salary { color: var(--accent4); }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    .compare, .cheat-grid, .db-types, .career-grid { grid-template-columns: 1fr; }
+    .hierarchy { flex-direction: column; }
+    .hier-step { border-right: none; border-bottom: 1px solid var(--border); }
+    .hier-step:last-child { border-bottom: none; }
+    h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="course-tag">ITDS 221</div>
+    <h1>Database <span>Management</span><br>Systems</h1>
+    <p class="subtitle">สรุปเนื้อหาครบถ้วน · พร้อมสอบ · อ่านก่อนสอบ 10 นาที</p>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav-pills">
+    <a href="#dikw">🧠 DIKW</a>
+    <a href="#hierarchy">📦 Data Hierarchy</a>
+    <a href="#filesys">⚠️ File Systems</a>
+    <a href="#dbms">🗄️ DBMS</a>
+    <a href="#types">🌐 ประเภท DB</a>
+    <a href="#formulas">🔢 สูตร</a>
+    <a href="#exam">🎯 ออกสอบ</a>
+    <a href="#cheatsheet">⚡ Cheat Sheet</a>
+    <a href="#careers">💼 อาชีพ</a>
+    <a href="#mindmap">🗺️ Mind Map</a>
+  </nav>
+
+  <!-- SECTION 1: DIKW -->
+  <section class="section" id="dikw">
+    <div class="section-header">
+      <span class="section-num">TOPIC 02</span>
+      <h2>DIKW Hierarchy</h2>
+    </div>
+
+    <div class="dikw-stack">
+      <div class="dikw-row row-data">
+        <div class="dikw-label">Data</div>
+        <div class="dikw-content">
+          <strong>ข้อมูลดิบ (Raw Fact) — บันทึกลงสื่อ เปลี่ยนแปลงไม่ได้</strong>
+          <small>เช่น วันเกิด · ราคาสินค้า · น้ำหนัก · บาร์โค้ด · วันหมดอายุ</small>
+        </div>
+      </div>
+      <div class="dikw-row row-info">
+        <div class="dikw-label">Information</div>
+        <div class="dikw-content">
+          <strong>ผ่านการประมวลผล (Dynamic) — ไม่บันทึกใน DB ให้ UI คำนวณ</strong>
+          <small>เช่น อายุ · GPA · BMI · ยอดขายรวม · กราฟ · เปอร์เซ็นต์ทุกชนิด</small>
+        </div>
+      </div>
+      <div class="dikw-row row-know">
+        <div class="dikw-label">Knowledge</div>
+        <div class="dikw-content">
+          <strong>รูปแบบสถิติจาก Information (เก็บเป็น Knowledge Base ได้)</strong>
+          <small>เช่น "ลูกค้าซื้อน้ำ → มักซื้อขนมปังด้วย" ระบบแนะนำโปรโมชั่น</small>
+        </div>
+      </div>
+      <div class="dikw-row row-wis">
+        <div class="dikw-label">Wisdom</div>
+        <div class="dikw-content">
+          <strong>การตัดสินใจของมนุษย์ — คอมพิวเตอร์เก็บไม่ได้</strong>
+          <small>เช่น ลูกค้าตัดสินใจ "หยิบ" หรือ "ไม่หยิบ" ขนมปังตามที่ระบบแนะนำ</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="exam-alert">
+      <strong>🎯 ออกสอบแน่ !</strong>
+      อาจารย์จะให้ดูหน้าจอ (ราคาทอง / พยากรณ์อากาศ) แล้วถามว่า "ตรงนี้คือ Data หรือ Information?"<br>
+      <strong>ทริค:</strong> เวลา (14:43 น.) = Data · ราคาปรับลด 50 บาท = Information · กราฟ/เปอร์เซ็นต์ = Information ทั้งหมด
+    </div>
+  </section>
+
+  <!-- SECTION 2: DATA HIERARCHY -->
+  <section class="section" id="hierarchy">
+    <div class="section-header">
+      <span class="section-num">TOPIC 03</span>
+      <h2>Data Hierarchy &amp; Storage</h2>
+    </div>
+
+    <div class="hierarchy">
+      <div class="hier-step">
+        <div class="icon">⚡</div>
+        <div class="label">Bit</div>
+        <div class="desc">0 หรือ 1</div>
+      </div>
+      <div class="hier-step">
+        <div class="icon">🔤</div>
+        <div class="label">Byte</div>
+        <div class="desc">8 bits = 1 ตัวอักษร</div>
+      </div>
+      <div class="hier-step">
+        <div class="icon">📊</div>
+        <div class="label">Field</div>
+        <div class="desc">คอลัมน์ 1 ชนิด</div>
+      </div>
+      <div class="hier-step">
+        <div class="icon">➡️</div>
+        <div class="label">Record</div>
+        <div class="desc">1 แถว / 1 วัตถุ</div>
+      </div>
+      <div class="hier-step">
+        <div class="icon">📄</div>
+        <div class="label">File</div>
+        <div class="desc">รวม Records</div>
+      </div>
+      <div class="hier-step">
+        <div class="icon">🗄️</div>
+        <div class="label">Database</div>
+        <div class="desc">รวม Files ที่เกี่ยวกัน</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📌 ข้อสังเกตสำคัญ</h3>
+      <p>Field = Attribute = คอลัมน์ (แนวตั้ง) · Record = Row = Tuple = แถว (แนวนอน)<br>
+      ทุก Record ในแต่ละ File ต้องมี <strong>Primary Key</strong> ที่ไม่ซ้ำกัน เช่น รหัสนักศึกษา, ISBN, บาร์โค้ด</p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: FILE SYSTEM PROBLEMS -->
+  <section class="section" id="filesys">
+    <div class="section-header">
+      <span class="section-num">TOPIC 03</span>
+      <h2>ปัญหาระบบแฟ้มข้อมูล (File System)</h2>
+    </div>
+
+    <div class="compare">
+      <div class="compare-card bad">
+        <div class="head">⚠️ File System (Excel/CSV) — ปัญหา</div>
+        <ul>
+          <li><strong>Data Redundancy:</strong> ข้อมูลซ้ำซ้อน เปลืองพื้นที่ นำไปสู่ Data Inconsistency</li>
+          <li><strong>Deletion Anomaly:</strong> ลบข้อมูลหนึ่งแล้วข้อมูลอื่นหายตาม</li>
+          <li><strong>Update Anomaly:</strong> อัปเดตข้อมูลเดียวต้องแก้หลายที่</li>
+          <li><strong>Structural Dependence:</strong> เปลี่ยนขนาดคอลัมน์ = ต้องรื้อโค้ดทั้งหมด</li>
+        </ul>
+      </div>
+      <div class="compare-card good">
+        <div class="head">✅ Database System (DBMS) — ข้อดี</div>
+        <ul>
+          <li><strong>ลดความซ้ำซ้อน</strong> ข้อมูลเก็บที่เดียว อ้างอิงข้ามตารางได้</li>
+          <li><strong>Data Sharing:</strong> ผู้ใช้หลายคนเข้าถึงได้พร้อมกัน</li>
+          <li><strong>Data Independence:</strong> เปลี่ยนโครงสร้าง DB ไม่กระทบโปรแกรม</li>
+          <li><strong>Security &amp; Integrity:</strong> ควบคุมสิทธิ์และความถูกต้องได้</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: DBMS -->
+  <section class="section" id="dbms">
+    <div class="section-header">
+      <span class="section-num">TOPIC 04</span>
+      <h2>ระบบฐานข้อมูล &amp; Data Object</h2>
+    </div>
+
+    <div class="card">
+      <h3>🗄️ DBMS คืออะไร?</h3>
+      <p>ซอฟต์แวร์ตัวกลาง (Intermediary) ระหว่างผู้ใช้กับฐานข้อมูล เช่น MySQL, Oracle, PostgreSQL, MS SQL Server</p>
+    </div>
+
+    <div class="card">
+      <h3>🎯 Data Object &amp; Primary Key</h3>
+      <p>
+        การออกแบบ DB ที่ดีต้องแยก Object ให้ถูกต้อง<br><br>
+        <strong>ตัวอย่างระดับสอบ:</strong><br>
+        · นักศึกษา ≠ รายวิชา → ต้องแยกตาราง<br>
+        · คนไข้ ≠ อาการป่วย → ต้องแยกตาราง<br><br>
+        <strong>Primary Key ตัวอย่าง:</strong><br>
+        · นักศึกษา = รหัสนักศึกษา · สินค้า = บาร์โค้ด · หนังสือ = ISBN
+      </p>
+    </div>
+
+    <div class="exam-alert">
+      <strong>🎯 ออกสอบแน่ !</strong>
+      อาจารย์จะให้โจทย์ธุรกิจ (เช่น สระว่ายน้ำ, สนามกีฬา) แล้วถามว่ามี Data Object อะไรบ้าง และอะไรคือ Primary Key
+    </div>
+  </section>
+
+  <!-- SECTION 5: DB TYPES -->
+  <section class="section" id="types">
+    <div class="section-header">
+      <span class="section-num">TOPIC 05</span>
+      <h2>ประเภทของฐานข้อมูล</h2>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h3>👥 แบ่งตามผู้ใช้</h3>
+      <p>Single-user (คนเดียว) · Workgroup &lt;50 คน · Enterprise &gt;50 คน</p>
+    </div>
+
+    <div class="db-types">
+      <div class="type-card">
+        <div class="icon">🏢</div>
+        <div class="name">Centralized</div>
+        <div class="desc">เก็บที่ศูนย์กลางเดียว</div>
+      </div>
+      <div class="type-card">
+        <div class="icon">🌐</div>
+        <div class="name">Distributed</div>
+        <div class="desc">กระจายหลายโหนด</div>
+      </div>
+      <div class="type-card">
+        <div class="icon">☁️</div>
+        <div class="name">Cloud</div>
+        <div class="desc">Azure, AWS, GCP</div>
+      </div>
+      <div class="type-card">
+        <div class="icon">📋</div>
+        <div class="name">Structured</div>
+        <div class="desc">ตาราง, SQL</div>
+      </div>
+      <div class="type-card">
+        <div class="icon">🔀</div>
+        <div class="name">Semi-structured</div>
+        <div class="desc">XML, JSON</div>
+      </div>
+      <div class="type-card">
+        <div class="icon">🖼️</div>
+        <div class="name">Unstructured</div>
+        <div class="desc">รูปภาพ, เสียง, วิดีโอ</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: FORMULAS -->
+  <section class="section" id="formulas">
+    <div class="section-header">
+      <span class="section-num">สูตร</span>
+      <h2>การคำนวณที่ต้องรู้</h2>
+    </div>
+
+    <div class="formula">
+      <div class="title">สูตรที่ 1 — แยก Data vs Information</div>
+      <div class="eq">Age = Current Year − Birth Year</div>
+      <div class="note">Birth Year = Data (บันทึกครั้งเดียว) · Age = Information (เปลี่ยนทุกปี ไม่เก็บใน DB)</div>
+    </div>
+
+    <div class="formula">
+      <div class="title">สูตรที่ 2 — คำนวณพื้นที่จัดเก็บ</div>
+      <div class="eq">1 ตัวอักษร = 1 Byte = 8 Bits</div>
+      <div class="note">ตัวอย่างสอบ: Field "AKA" ใช้กี่ Bit? → 3 ตัวอักษร × 8 = 24 Bits</div>
+    </div>
+
+    <div class="exam-alert">
+      <strong>🎯 ออกสอบแน่ !</strong>
+      ถามการคำนวณ Bit/Byte ของชื่อหรือคำในฐานข้อมูล เช่น "หากชื่อ Field มี N ตัวอักษร ใช้กี่ Bit?"
+    </div>
+  </section>
+
+  <!-- SECTION 7: EXAM FOCUS -->
+  <section class="section" id="exam">
+    <div class="section-header">
+      <span class="section-num">สอบ</span>
+      <h2>🎯 จุดที่อาจารย์เน้นออกสอบ</h2>
+    </div>
+
+    <div class="card">
+      <h3>📱 Screen Analysis (วิเคราะห์หน้าจอ)</h3>
+      <p>อาจารย์แคปหน้าจอ เช่น หน้าราคาทอง / พยากรณ์อากาศ ถามว่า "ตรงนี้คืออะไร?"<br><br>
+      · เวลา <strong>14:43 น.</strong> → <span style="color:var(--accent3)">Data</span><br>
+      · ราคาทองปรับลด <strong>50 บาท</strong> → <span style="color:var(--accent)">Information</span> (ราคาวันนี้ − ราคาเมื่อวาน)<br>
+      · <strong>กราฟเส้น</strong> ทุกชนิด → <span style="color:var(--accent)">Information</span><br>
+      · <strong>เปอร์เซ็นต์</strong> ทุกชนิด → <span style="color:var(--accent)">Information</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>💡 ทำไมไม่เก็บ Information ในฐานข้อมูล?</h3>
+      <p>เพราะมันเป็น <strong>Dynamic</strong> — เปลี่ยนแปลงได้ตลอดตามเวลาและปัจจัยแวดล้อม<br>
+      ถ้าเก็บ "อายุ" ไว้ใน DB วันพรุ่งนี้ข้อมูลก็ผิดแล้ว<br>
+      ให้โปรแกรม (UI) คำนวณสดๆ ทุกครั้งที่เรียกดูแทน</p>
+    </div>
+
+    <div class="card">
+      <h3>🏢 DIKW + 7-Eleven (ตัวอย่างที่อาจารย์ใช้)</h3>
+      <p>
+        · <strong>Data:</strong> บาร์โค้ดสินค้า, ราคา, วันหมดอายุ<br>
+        · <strong>Information:</strong> จำนวนขวดน้ำที่เหลือ, ยอดขายรวมวันนี้<br>
+        · <strong>Knowledge:</strong> "ลูกค้าซื้อน้ำ มักซื้อขนมปัง" → ขึ้นโปรโมชั่นที่แคชเชียร์<br>
+        · <strong>Wisdom:</strong> ลูกค้าตัดสินใจหยิบหรือไม่หยิบขนมปัง
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 8: CHEAT SHEET -->
+  <section class="section" id="cheatsheet">
+    <div class="section-header">
+      <span class="section-num">อ่านก่อนสอบ</span>
+      <h2">⚡ Cheat Sheet</h2>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-item">
+        <div class="key">Data Hierarchy</div>
+        <p>Bit → Byte (8 bits) → Field → Record → File → Database</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">Data</div>
+        <p>Raw Fact บันทึกลงสื่อ เปลี่ยนไม่ได้ เช่น วันเกิด, บาร์โค้ด, น้ำหนัก</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">Information</div>
+        <p>ผ่านการคำนวณ Dynamic เช่น อายุ, GPA, ยอดขาย, กราฟ, % ไม่เก็บใน DB</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">Knowledge</div>
+        <p>รูปแบบสถิติจาก Information เช่น ซื้อ A → ซื้อ B (Knowledge Base ได้)</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">Wisdom</div>
+        <p>การตัดสินใจมนุษย์ คอมพิวเตอร์เก็บไม่ได้</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">Primary Key</div>
+        <p>ตัวระบุ Object: รหัสนักศึกษา, บาร์โค้ด, ISBN ต้องไม่ซ้ำ</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">DBMS</div>
+        <p>ตัวกลางระหว่างผู้ใช้กับ DB แก้ปัญหา Redundancy &amp; Anomalies</p>
+      </div>
+      <div class="cheat-item">
+        <div class="key">Structural Dependence</div>
+        <p>ข้อเสีย File System ถ้าเปลี่ยนความยาว Column โปรแกรมพังทั้งหมด</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 9: CAREERS -->
+  <section class="section" id="careers">
+    <div class="section-header">
+      <span class="section-num">TOPIC 05</span>
+      <h2>💼 อาชีพและเงินเดือน</h2>
+    </div>
+
+    <div class="career-grid">
+      <div class="career-card designer">
+        <div class="role">🎨 Database Designer</div>
+        <div class="salary">25,000–30,000 ฿</div>
+        <p>ออกแบบโครงสร้างฐานข้อมูล เน้นช่วงครึ่งเทอมแรก<br>เงินเดือนเริ่มต้นสูงกว่า Developer</p>
+      </div>
+      <div class="career-card developer">
+        <div class="role">💻 Database Developer</div>
+        <div class="salary">15,000–25,000 ฿</div>
+        <p>พัฒนาระบบฐานข้อมูล เขียนโค้ด SQL และจัดการข้อมูล</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>📋 โครงการ (30%)</h3>
+      <p>
+        ทำงานกลุ่ม 5 คน แบ่ง 2 ระยะ<br>
+        · <strong>ระยะที่ 1 (ก่อน Midterm):</strong> ออกแบบ<br>
+        · <strong>ระยะที่ 2 (หลัง Midterm):</strong> พัฒนา<br>
+        · ต้องเลือก Business Domain ที่ไม่ซ้ำกันใน Section เช่น ถ้ากลุ่มอื่นเลือก 7-Eleven ให้เลือก FamilyMart แทน
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 10: MIND MAP -->
+  <section class="section" id="mindmap">
+    <div class="section-header">
+      <span class="section-num">ภาพรวม</span>
+      <h2>🗺️ Mind Map</h2>
+    </div>
+
+    <div class="mindmap">
+      <div class="mm-root">📚 ITDS 221 — Database Management Systems</div>
+
+      <div class="mm-branch">
+        <div class="mm-branch-title">1. DIKW Hierarchy</div>
+        <ul class="mm-items">
+          <li>Raw Fact → ความจริงดิบ ติดตัววัตถุ</li>
+          <li>Data → บันทึกลงสื่อ เปลี่ยนไม่ได้ (วันเกิด, บาร์โค้ด)</li>
+          <li>Information → คำนวณแล้ว Dynamic (อายุ, กราฟ) ไม่เก็บใน DB</li>
+          <li>Knowledge → รูปแบบสถิติ (ซื้อ A → ซื้อ B) เก็บเป็น Knowledge Base</li>
+          <li>Wisdom → การตัดสินใจมนุษย์ คอมพิวเตอร์เก็บไม่ได้</li>
+        </ul>
+      </div>
+
+      <div class="mm-branch">
+        <div class="mm-branch-title">2. Data Hierarchy &amp; Storage</div>
+        <ul class="mm-items">
+          <li>Bit (0,1) → Byte (8 bits = 1 char) → Field → Record → File → Database</li>
+          <li>1 ตัวอักษร = 1 Byte = 8 Bits</li>
+        </ul>
+      </div>
+
+      <div class="mm-branch">
+        <div class="mm-branch-title">3. File System vs Database System</div>
+        <ul class="mm-items">
+          <li>File System: Redundancy, Anomalies, Structural Dependence</li>
+          <li>DBMS: ลดซ้ำซ้อน, Data Sharing, Data Independence</li>
+        </ul>
+      </div>
+
+      <div class="mm-branch">
+        <div class="mm-branch-title">4. Database Design Concept</div>
+        <ul class="mm-items">
+          <li>Data Object: สิ่งที่สนใจ เช่น นักเรียน, คนไข้, สินค้า</li>
+          <li>Primary Key: Identifier ไม่ซ้ำ เช่น รหัสนักศึกษา, ISBN, Barcode</li>
+        </ul>
+      </div>
+
+      <div class="mm-branch">
+        <div class="mm-branch-title">5. Types of Database</div>
+        <ul class="mm-items">
+          <li>ตามผู้ใช้: Single, Workgroup, Enterprise</li>
+          <li>ตามสถานที่: Centralized, Distributed, Cloud</li>
+          <li>ตามโครงสร้าง: Structured, Semi-structured, Unstructured</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>ITDS 221 — Database Management Systems · สรุปจากเนื้อหาในชั้นเรียน</p>
+    <p style="margin-top:6px; font-size:12px;">ข้อมูลเพื่อประกอบการศึกษาเท่านั้น</p>
+  </footer>
+
+</div>
+</body>
+</html>
