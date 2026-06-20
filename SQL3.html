@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Modeling & DBMS — Interactive Learning</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --bg2: #161822;
+  --bg3: #1e2030;
+  --card: #1a1d2e;
+  --border: rgba(255,255,255,0.06);
+  --text: #e2e4ed;
+  --text2: #9ba0b8;
+  --muted: #5c6078;
+  --blue: #6c72cb;
+  --purple: #9b6dff;
+  --cyan: #38bdf8;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --sidebar-w: 260px;
+}
+
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--blue) var(--bg2); }
+body { font-family: 'Inter','Noto Sans Thai',sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+/* Progress Bar */
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg,var(--blue),var(--purple)); z-index: 9999; transition: width 0.1s; }
+
+/* Sidebar */
+.sidebar { position: fixed; top: 0; left: -280px; width: var(--sidebar-w); height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); z-index: 1000; transition: left 0.25s; overflow-y: auto; padding: 1.25rem 0; }
+.sidebar.open { left: 0; }
+.sidebar-head { padding: 0 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-head h3 { font-size: 0.95rem; font-weight: 700; }
+.sidebar-head p { font-size: 0.75rem; color: var(--muted); }
+.sidebar-nav a { display: block; padding: 9px 1.25rem; color: var(--text2); text-decoration: none; font-size: 0.85rem; border-left: 3px solid transparent; transition: 0.15s; }
+.sidebar-nav a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.sidebar-nav a.active { color: var(--blue); border-left-color: var(--blue); background: rgba(108,114,203,0.08); }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+.overlay.show { display: block; }
+
+/* Top Bar */
+.topbar { position: fixed; top: 0; left: 0; right: 0; height: 52px; background: rgba(15,17,23,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 998; display: flex; align-items: center; padding: 0 1rem; gap: 0.75rem; }
+.menu-btn { background: none; border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.menu-btn:hover { background: var(--bg3); }
+.search-wrap { flex: 1; max-width: 320px; margin-left: auto; }
+.search-wrap input { width: 100%; padding: 7px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; outline: none; font-family: inherit; }
+.search-wrap input::placeholder { color: var(--muted); }
+.search-wrap input:focus { border-color: var(--blue); }
+.search-dropdown { position: absolute; top: 48px; right: 1rem; width: 320px; max-height: 350px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; display: none; }
+.search-dropdown.show { display: block; }
+.search-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.search-item:last-child { border-bottom: none; }
+.search-item:hover { background: rgba(255,255,255,0.03); }
+.search-item h4 { font-size: 0.85rem; font-weight: 600; }
+.search-item p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+/* Main */
+.main { padding: 72px 1.5rem 3rem; max-width: 860px; margin: 0 auto; }
+
+/* Hero */
+.hero { text-align: center; padding: 3rem 0 2rem; }
+.hero-badge { display: inline-block; padding: 5px 14px; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); border-radius: 20px; font-size: 0.8rem; color: var(--cyan); margin-bottom: 1.25rem; }
+.hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+.hero p { color: var(--text2); max-width: 560px; margin: 0 auto 1.5rem; font-size: 0.95rem; }
+.hero-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: 0.2s; }
+.btn-primary { background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost { background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { background: rgba(255,255,255,0.06); }
+.hero-stats { display: flex; justify-content: center; gap: 2.5rem; }
+.hero-stats .num { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
+.hero-stats .label { font-size: 0.8rem; color: var(--muted); }
+
+/* Section */
+.section { margin-bottom: 3rem; }
+.section-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+.section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+.section .sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+/* Card */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+.card p { color: var(--text2); line-height: 1.8; }
+.card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; }
+
+/* Boxes */
+.box { border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+.box h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+.box p, .box ul { color: var(--text2); }
+.box ul { padding-left: 1.25rem; }
+.box li { margin-bottom: 0.4rem; }
+.box-blue { background: rgba(108,114,203,0.1); border: 1px solid rgba(108,114,203,0.2); }
+.box-blue h4 { color: var(--blue); }
+.box-cyan { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.15); }
+.box-cyan h4 { color: var(--cyan); }
+.box-amber { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15); }
+.box-amber h4 { color: var(--amber); }
+.box-red { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.15); }
+.box-red h4 { color: var(--red); }
+.box-pink { background: rgba(244,114,182,0.08); border: 1px solid rgba(244,114,182,0.15); }
+.box-pink h4 { color: var(--pink); }
+.box-purple { background: rgba(155,109,255,0.08); border: 1px solid rgba(155,109,255,0.15); }
+.box-purple h4 { color: var(--purple); }
+
+/* Collapse */
+.coll { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.5rem; overflow: hidden; }
+.coll-head { padding: 0.85rem 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 0.9rem; user-select: none; }
+.coll-head:hover { background: rgba(255,255,255,0.02); }
+.coll-head .arr { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+.coll.open .coll-head .arr { transform: rotate(180deg); }
+.coll-body { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+.coll.open .coll-body { max-height: 5000px; }
+.coll-inner { padding: 0 1.25rem 1.25rem; color: var(--text2); }
+.coll-inner p { margin-bottom: 0.6rem; }
+.coll-inner ul { padding-left: 1.25rem; }
+.coll-inner li { margin-bottom: 0.4rem; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.85rem; }
+thead { background: linear-gradient(135deg,var(--blue),var(--purple)); }
+th { padding: 10px 14px; text-align: left; font-weight: 600; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text2); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+/* Tabs */
+.tabs { margin: 1rem 0; }
+.tab-btns { display: flex; gap: 3px; background: var(--bg3); border-radius: 8px; padding: 3px; margin-bottom: 0.75rem; }
+.tab-btn { padding: 7px 14px; border-radius: 6px; border: none; background: none; color: var(--text2); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.tab-btn.active { background: var(--blue); color: #fff; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Hierarchy */
+.hier { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; margin: 1.5rem 0; }
+.hier-step { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 420px; }
+.hier-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: rgba(108,114,203,0.15); }
+.hier-step:nth-child(3) .hier-icon { background: rgba(56,189,248,0.15); }
+.hier-step:nth-child(5) .hier-icon { background: rgba(155,109,255,0.15); }
+.hier-step:nth-child(7) .hier-icon { background: rgba(244,114,182,0.15); }
+.hier-text h5 { font-size: 0.85rem; font-weight: 600; }
+.hier-text p { font-size: 0.75rem; color: var(--muted); }
+.hier-arr { color: var(--muted); font-size: 0.9rem; }
+
+/* Data Flow */
+.flow { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin: 1.5rem 0; padding: 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; }
+.flow-item { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; text-align: center; }
+.flow-item:nth-child(1) { background: rgba(108,114,203,0.15); color: var(--blue); }
+.flow-item:nth-child(3) { background: rgba(56,189,248,0.15); color: var(--cyan); }
+.flow-item:nth-child(5) { background: rgba(155,109,255,0.15); color: var(--purple); }
+.flow-item:nth-child(7) { background: rgba(244,114,182,0.15); color: var(--pink); }
+.flow-arrow { color: var(--muted); }
+
+/* SQL Card */
+.sql { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 0.75rem 0; }
+.sql-head { padding: 8px 14px; background: rgba(108,114,203,0.1); border-bottom: 1px solid var(--border); font-size: 0.8rem; font-weight: 600; color: var(--blue); }
+.sql-body { padding: 0.75rem 1rem; }
+.sql-body pre { font-family: 'JetBrains Mono',monospace; font-size: 0.8rem; color: var(--cyan); line-height: 1.8; white-space: pre-wrap; }
+.sk { color: var(--purple); font-weight: 600; }
+.ss { color: var(--green); }
+.sc { color: var(--muted); font-style: italic; }
+
+/* Flashcards */
+.fc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; margin: 1rem 0; }
+.fc { perspective: 800px; height: 170px; cursor: pointer; }
+.fc-inner { position: relative; width: 100%; height: 100%; transition: transform 0.45s; transform-style: preserve-3d; }
+.fc.flipped .fc-inner { transform: rotateY(180deg); }
+.fc-front, .fc-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem; text-align: center; border: 1px solid var(--border); }
+.fc-front { background: rgba(108,114,203,0.1); }
+.fc-back { background: rgba(56,189,248,0.08); transform: rotateY(180deg); }
+.fc-front h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+.fc-front p { font-size: 0.8rem; color: var(--muted); }
+.fc-back h4 { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.3rem; }
+.fc-back p { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+.fc-hint { position: absolute; bottom: 10px; font-size: 0.7rem; color: var(--muted); }
+
+/* Quiz */
+.quiz-q { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+.quiz-q h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; }
+.quiz-q .qtext { font-weight: 600; margin-bottom: 0.75rem; }
+.quiz-opts { display: flex; flex-direction: column; gap: 0.4rem; }
+.quiz-opt { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; transition: 0.15s; }
+.quiz-opt:hover { background: rgba(255,255,255,0.03); border-color: var(--blue); }
+.quiz-opt.selected { background: rgba(108,114,203,0.12); border-color: var(--blue); }
+.quiz-opt.correct { background: rgba(52,211,153,0.12); border-color: var(--green); color: var(--green); }
+.quiz-opt.wrong { background: rgba(248,113,113,0.12); border-color: var(--red); color: var(--red); }
+.opt-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.75rem; flex-shrink: 0; }
+.quiz-exp { margin-top: 0.75rem; padding: 0.75rem; background: var(--bg3); border-radius: 8px; display: none; font-size: 0.85rem; color: var(--text2); }
+.quiz-exp.show { display: block; }
+.quiz-submit { display: block; width: 100%; padding: 11px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 0.75rem; font-family: inherit; }
+.quiz-score { text-align: center; padding: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-top: 0.75rem; display: none; }
+.quiz-score.show { display: block; }
+.quiz-score .sv { font-size: 2.5rem; font-weight: 900; color: var(--blue); }
+
+/* Cheat Sheet */
+.cheat { background: rgba(108,114,203,0.06); border: 1px solid rgba(108,114,203,0.15); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+.cheat h3 { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--blue); }
+.cheat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; }
+.cheat-item { padding: 0.75rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.cheat-item h4 { font-size: 0.8rem; font-weight: 700; color: var(--blue); margin-bottom: 0.3rem; }
+.cheat-item p { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+
+/* Back to Top */
+.btt { position: fixed; bottom: 24px; right: 24px; width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; border: none; font-size: 1.1rem; cursor: pointer; z-index: 997; opacity: 0; visibility: hidden; transform: translateY(12px); transition: 0.25s; display: flex; align-items: center; justify-content: center; }
+.btt.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.btt:hover { opacity: 0.85; }
+
+/* Footer */
+.footer { text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--border); margin-top: 3rem; color: var(--muted); font-size: 0.8rem; }
+
+/* Lists */
+.cl { padding-left: 1.25rem; margin: 0.4rem 0; }
+.cl li { margin-bottom: 0.4rem; color: var(--text2); line-height: 1.7; }
+.cl li strong { color: var(--text); }
+strong { color: var(--text); }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 32px; margin: 1.5rem 0; }
+.timeline::before { content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--blue), var(--cyan)); }
+.timeline-item { position: relative; margin-bottom: 1.5rem; }
+.timeline-item::before { content: ''; position: absolute; left: -25px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--blue); border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--blue); }
+.timeline-year { font-size: 0.7rem; font-weight: 700; color: var(--cyan); margin-bottom: 2px; }
+.timeline-title { font-weight: 700; margin-bottom: 4px; }
+.timeline-desc { font-size: 0.85rem; color: var(--text2); }
+
+/* Process Diagram */
+.process-diagram { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 1.5rem 0; padding: 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; }
+.process-step { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 80px; }
+.process-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: rgba(108,114,203,0.15); border: 2px solid var(--blue); }
+.process-label { font-size: 0.75rem; font-weight: 700; text-align: center; }
+.process-arrow { color: var(--cyan); font-size: 1.2rem; flex-shrink: 0; }
+
+/* ER Diagram */
+.er { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin: 1.5rem 0; padding: 1.5rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; }
+.entity { background: var(--bg2); border: 2px solid var(--blue); border-radius: 10px; min-width: 200px; overflow: hidden; }
+.entity-head { padding: 0.6rem 0.75rem; text-align: center; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; }
+.entity.purple { border-color: var(--purple); }
+.entity.purple .entity-head { background: linear-gradient(135deg,var(--purple),var(--pink)); }
+.entity.cyan { border-color: var(--cyan); }
+.entity.cyan .entity-head { background: linear-gradient(135deg,var(--cyan),var(--blue)); }
+.entity-field { padding: 6px 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+.entity-field:last-child { border-bottom: none; }
+.pk { color: var(--amber); font-weight: 700; font-size: 0.65rem; padding: 1px 5px; background: rgba(251,191,36,0.12); border-radius: 3px; }
+.fk { color: var(--cyan); font-weight: 700; font-size: 0.65rem; padding: 1px 5px; background: rgba(56,189,248,0.12); border-radius: 3px; }
+.er-link { display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 1.5rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main { padding: 64px 1rem 2rem; }
+  .hero h1 { font-size: 1.6rem; }
+  .hero-stats { gap: 1.5rem; }
+  .flow { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+  .er { flex-direction: column; align-items: center; }
+  .er-link { transform: rotate(90deg); }
+  .fc-grid { grid-template-columns: 1fr; }
+  .cheat-grid { grid-template-columns: 1fr; }
+  .section h2 { font-size: 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div class="overlay" id="overlay"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <h3>Data Modeling</h3>
+    <p>DBMS - Data Modeling & Database Management</p>
+  </div>
+  <div class="sidebar-nav" id="sideNav">
+    <a href="#s-overview" class="active">ภาพรวมบทเรียน</a>
+    <a href="#s-importance">ความสำคัญ Data Modeling</a>
+    <a href="#s-process">กระบวนการสร้าง DB</a>
+    <a href="#s-semantic">Data Semantic</a>
+    <a href="#s-blocks">4 Building Blocks</a>
+    <a href="#s-rules">Business Rules</a>
+    <a href="#s-evolution">วิวัฒนาการ Data Models</a>
+    <a href="#s-examples">ตัวอย่างประกอบ</a>
+    <a href="#s-dictionary">คำศัพท์สำคัญ</a>
+    <a href="#s-examtraps">จุดที่ออกสอบ</a>
+    <a href="#s-flash">Flashcards</a>
+    <a href="#s-quiz">Quiz 20 ข้อ</a>
+    <a href="#s-mindmap">Mind Map</a>
+    <a href="#s-cheat">Cheat Sheet</a>
+  </div>
+</nav>
+
+<div class="topbar">
+  <button class="menu-btn" id="menuBtn">&#9776;</button>
+  <div class="search-wrap" style="position:relative;">
+    <input type="text" id="searchIn" placeholder="ค้นหาเนื้อหา..." />
+    <div class="search-dropdown" id="searchDrop"></div>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-badge">Database Fundamentals</div>
+  <h1>Data Modeling<br>& Database Management</h1>
+  <p>เรียนรู้แนวคิดการสร้างแบบจำลองข้อมูล ตั้งแต่ Building Blocks, Business Rules, การวิเคราะห์ความสัมพันธ์แบบ Forward/Backward จนถึงวิวัฒนาการของ Data Model</p>
+  <div class="hero-btns">
+    <a href="#s-overview" class="btn btn-primary">เริ่มเรียนเลย</a>
+    <a href="#s-quiz" class="btn btn-ghost">ทดสอบความรู้</a>
+  </div>
+  <div class="hero-stats">
+    <div><div class="num">14</div><div class="label">หัวข้อเรียน</div></div>
+    <div><div class="num">8</div><div class="label">Flashcards</div></div>
+    <div><div class="num">20</div><div class="label">Quiz ข้อ</div></div>
+  </div>
+</section>
+
+<!-- 1 Overview -->
+<div class="section" id="s-overview">
+  <div class="section-num">1</div>
+  <h2>ภาพรวมบทเรียน</h2>
+  <p class="sub">Data Modeling คืออะไร?</p>
+  <div class="card">
+    <p>บทเรียนนี้ครอบคลุมเรื่อง <strong>การสร้างแบบจำลองข้อมูล (Data Modeling)</strong> ซึ่งเป็นกระบวนการนำสิ่งที่มีอยู่ในโลกแห่งความเป็นจริง (Real World) มาแปลงให้อยู่ในรูปแบบที่ระบบคอมพิวเตอร์และฐานข้อมูลสามารถจัดเก็บและเข้าใจได้</p>
+  </div>
+  <div class="card">
+    <h3>สิ่งที่จะได้เรียนรู้</h3>
+    <div class="flow">
+      <div class="flow-item">วิเคราะห์<br><small>Business Rules</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">แยกแยะ<br><small>Entity, Attribute, Relationship</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Forward /<br><small>Backward Analysis</small></div>
+    </div>
+  </div>
+  <div class="box box-blue">
+    <h4>Key Point</h4>
+    <p>แบบจำลองข้อมูลเปรียบเสมือน <strong>"พิมพ์เขียว (Blueprint)"</strong> ที่ใช้สื่อสารระหว่างผู้บริหาร นักออกแบบ และโปรแกรมเมอร์</p>
+  </div>
+</div>
+
+<!-- 2 Importance -->
+<div class="section" id="s-importance">
+  <div class="section-num">2</div>
+  <h2>ความสำคัญของ Data Modeling</h2>
+  <p class="sub">ทำไมต้องเรียนรู้?</p>
+  <div class="card">
+    <p>บุคลากรแต่ละฝ่ายมองเห็นข้อมูลชุดเดียวกันในมุมมองที่ต่างกัน <strong>Data Model</strong> จึงถูกสร้างขึ้นเพื่อเป็นภาษากลางและมาตรฐานในการสื่อสารให้ทุกคนเข้าใจโครงสร้างตรงกัน</p>
+  </div>
+  <div class="er" style="flex-direction:column;align-items:center;gap:0.75rem;">
+    <div class="entity">
+      <div class="entity-head">👔 ผู้บริหาร</div>
+      <div class="entity-field">เห็นข้อมูลสรุป (Summary) เพื่อตัดสินใจ</div>
+    </div>
+    <div class="er-link">⟷</div>
+    <div class="entity purple">
+      <div class="entity-head">🖥️ ผู้ใช้ปลายทาง</div>
+      <div class="entity-field">เห็นเฉพาะหน้าจอ UI</div>
+    </div>
+    <div class="er-link">⟷</div>
+    <div class="entity cyan">
+      <div class="entity-head">🏗️ นักออกแบบ DB</div>
+      <div class="entity-field">เห็นโครงสร้าง Schema</div>
+    </div>
+    <div class="er-link">⟷</div>
+    <div class="entity">
+      <div class="entity-head">👨‍💻 โปรแกรมเมอร์</div>
+      <div class="entity-field">เห็นข้อมูลดิบ Raw Data</div>
+    </div>
+  </div>
+  <div class="box box-amber">
+    <h4>Key Takeaway</h4>
+    <p>Data Model = พิมพ์เขียวที่ทำให้ทุกฝ่ายในองค์กร "เห็นภาพเดียวกัน" ก่อนลงมือสร้างจริง</p>
+  </div>
+</div>
+
+<!-- 3 Process -->
+<div class="section" id="s-process">
+  <div class="section-num">3</div>
+  <h2>กระบวนการสร้างฐานข้อมูล</h2>
+  <p class="sub">ลำดับขั้นการเกิด Database</p>
+  <div class="card">
+    <p>ลำดับขั้นของการเกิดฐานข้อมูล: เริ่มจาก <strong>ข้อเท็จจริงในโลกความจริง</strong> ไปจนถึง <strong>Database</strong> ที่จัดเก็บใน DBMS</p>
+  </div>
+  <div class="process-diagram">
+    <div class="process-step">
+      <div class="process-icon">🌍</div>
+      <div class="process-label">Real World<br>Fact</div>
+    </div>
+    <div class="process-arrow">→</div>
+    <div class="process-step">
+      <div class="process-icon">📄</div>
+      <div class="process-label">Media<br>(กระดาษ/Excel)</div>
+    </div>
+    <div class="process-arrow">→</div>
+    <div class="process-step">
+      <div class="process-icon">📊</div>
+      <div class="process-label">Data</div>
+    </div>
+    <div class="process-arrow">→</div>
+    <div class="process-step">
+      <div class="process-icon">⚙️</div>
+      <div class="process-label">DBMS<br>(SQL/MySQL)</div>
+    </div>
+    <div class="process-arrow">→</div>
+    <div class="process-step">
+      <div class="process-icon">🗄️</div>
+      <div class="process-label">Database</div>
+    </div>
+  </div>
+  <div class="box box-cyan">
+    <h4>ตัวอย่าง</h4>
+    <p><strong>Real World Fact</strong> → บันทึกลงสื่อ (<strong>Media</strong>) เช่น กระดาษ/Excel → กลายเป็น <strong>Data</strong> → ถ่ายโอนเข้า <strong>DBMS</strong> → จัดเก็บเป็น <strong>Database</strong></p>
+  </div>
+  <div class="box box-amber">
+    <h4>จำไว้</h4>
+    <p>ลำดับ: Fact → Media → Data → DBMS → Database</p>
+  </div>
+</div>
+
+<!-- 4 Data Semantic -->
+<div class="section" id="s-semantic">
+  <div class="section-num">4</div>
+  <h2>Data Semantic</h2>
+  <p class="sub">ความหมายของข้อมูล</p>
+  <div class="card">
+    <p>คอมพิวเตอร์ไม่สามารถเข้าใจข้อมูลได้เหมือนมนุษย์ จึงต้องมี <strong>Data Dictionary (พจนานุกรมข้อมูล)</strong> เพื่ออธิบายความหมาย (Semantic) ของข้อมูลแต่ละตัว</p>
+  </div>
+  <div class="card">
+    <h3>มนุษย์ vs คอมพิวเตอร์</h3>
+    <p><strong>🧠 มนุษย์เข้าใจทันที:</strong> เห็นสัญลักษณ์ ♂ และ ♀ → รู้ทันทีว่าเป็นชายและหญิง</p>
+    <p style="margin-top:0.5rem;"><strong>🤖 คอมพิวเตอร์ไม่เข้าใจ:</strong> เห็นตัวอักษร "F" ในตาราง → ไม่รู้ความหมายว่าคือเพศหญิง</p>
+  </div>
+  <div class="box box-blue">
+    <h4>Key Point</h4>
+    <p>ต้องสร้าง <strong>Data Dictionary</strong> เพื่ออธิบายว่า F = Female ให้ระบบเข้าใจ</p>
+  </div>
+  <div class="box box-amber">
+    <h4>สรุป</h4>
+    <p>Data Semantic = ความหมายแฝงของข้อมูล / Data Dictionary = เครื่องมือแปลความหมายให้เครื่อง</p>
+  </div>
+</div>
+
+<!-- 5 Building Blocks -->
+<div class="section" id="s-blocks">
+  <div class="section-num">5</div>
+  <h2>4 Basic Building Blocks</h2>
+  <p class="sub">องค์ประกอบพื้นฐานของ Data Model</p>
+  <div class="card">
+    <p>แบบจำลองข้อมูลประกอบด้วย 4 องค์ประกอบหลัก: <strong>Entity, Attribute, Relationship, Constraint</strong></p>
+  </div>
+  <div class="card">
+    <h3>Entity</h3>
+    <p>แปลงมาจาก Data Object ในโลกจริง สิ่งที่เราต้องการจัดเก็บข้อมูล</p>
+    <div class="tabs">
+      <div class="tab-btns">
+        <button class="tab-btn active" onclick="switchTab(event,'tp-physical')">Physical / Tangible</button>
+        <button class="tab-btn" onclick="switchTab(event,'tp-logical')">Logical / Intangible</button>
+      </div>
+      <div class="tab-pane active" id="tp-physical"><div class="card"><h3>Physical / Tangible</h3><p>วัตถุที่จับต้องได้ เช่น คน (ลูกค้า, นักเรียน), สถานที่ (ห้องเรียน), ทรัพย์สิน (สินค้า)</p></div></div>
+      <div class="tab-pane" id="tp-logical"><div class="card"><h3>Logical / Intangible</h3><p>สิ่งที่จับต้องไม่ได้: กระบวนการ (Process) หรือ นามธรรม (Abstract) เช่น การลงทะเบียน (Enrollment), การสอบ (Examination), กำไร (Profit), อุบัติเหตุ (Accident)</p></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Attribute</h3>
+    <p>คุณลักษณะของ Entity = Column/Field ในตาราง เช่น ID, Name</p>
+  </div>
+  <div class="card">
+    <h3>Relationship</h3>
+    <p>เชื่อมโยงระหว่าง Entity 2 ตัวขึ้นไป: 1:1, 1:M, M:N</p>
+  </div>
+  <div class="card">
+    <h3>Constraint</h3>
+    <p>ข้อบังคับเสริม (Optional) มักใช้คำว่า "ต้อง (Must)"</p>
+  </div>
+  <div class="box box-red">
+    <h4>ข้อควรระวัง</h4>
+    <p>ข้อสอบมักหลอกด้วยสิ่งที่เป็นนามธรรมหรือกระบวนการ เช่น "การลงทะเบียน" — คำตอบคือ <strong>เป็น Logical Entity ได้!</strong></p>
+  </div>
+  <div class="box box-cyan">
+    <h4>ตัวอย่าง Constraint</h4>
+    <p>"Student can enroll" (แค่ข้อเท็จจริง) vs "Student <u>must</u> enroll 5 subjects" (Constraint — มีเงื่อนไขบังคับ)</p>
+  </div>
+  <div class="box box-purple">
+    <h4>สรุป</h4>
+    <p>Entity = คำนาม | Attribute = Schema/Column | Relationship = คำกริยา | Constraint = คำว่า "ต้อง"</p>
+  </div>
+</div>
+
+<!-- 6 Business Rules -->
+<div class="section" id="s-rules">
+  <div class="section-num">6</div>
+  <h2>Business Rules & Forward/Backward Analysis</h2>
+  <p class="sub">การวิเคราะห์ความสัมพันธ์</p>
+  <div class="card">
+    <p>Business Rule ที่ดี ประกอบด้วย <strong>ประธาน + กริยา + กรรม</strong> โดยคำนามแปลงเป็น Entity และคำกริยาแปลงเป็น Relationship จากนั้นต้องวิเคราะห์ทั้ง <strong>Forward</strong> และ <strong>Backward</strong> เพื่อหาความสัมพันธ์ที่แท้จริง</p>
+  </div>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">Forward Analysis (Active Voice)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>Forward:</strong> "Student attend classes" → 1:M (นักเรียน 1 คน เข้าเรียนได้หลายคลาส)</p>
+      <div class="flow">
+        <div class="flow-item">Business Rule</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">Forward (Active Voice)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">Student attend classes (1:M)</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">Backward Analysis (Passive Voice)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>Backward:</strong> "Classes are attended by students" → 1:M (คลาส 1 ห้อง ถูกเรียนโดยนักเรียนหลายคน)</p>
+      <div class="flow">
+        <div class="flow-item">คิดย้อนกลับ</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">Backward (Passive Voice)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">Classes are attended by students (1:M)</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">สรุป: Forward + Backward = M:N<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <div class="box box-purple">
+        <h4>🏆 สรุป: M:N = Forward (1:M) + Backward (1:M)</h4>
+        <p>รวมกัน = Many-to-Many</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <h3>การแปลง Business Rule</h3>
+    <ul class="cl">
+      <li><strong>คำนาม (Noun)</strong> → แปลงเป็น <strong>Entity</strong></li>
+      <li><strong>คำกริยา (Verb)</strong> → แปลงเป็น <strong>Relationship</strong></li>
+      <li><strong>"ต้อง (must)"</strong> → แปลงเป็น <strong>Constraint</strong></li>
+    </ul>
+  </div>
+  <div class="box box-red">
+    <h4>ข้อควรระวัง</h4>
+    <p>ห้ามวิเคราะห์เพียงฝั่งเดียว! ถ้าโจทย์ให้มาขาเดียว <strong>ต้องคิดย้อนกลับเองเสมอ</strong></p>
+  </div>
+  <div class="box box-amber">
+    <h4>Key Takeaway</h4>
+    <p>Forward (ซ้าย→ขวา, Active) + Backward (ขวา→ซ้าย, Passive) = ความสัมพันธ์ที่แท้จริง</p>
+  </div>
+</div>
+
+<!-- 7 Evolution -->
+<div class="section" id="s-evolution">
+  <div class="section-num">7</div>
+  <h2>วิวัฒนาการของ Data Models</h2>
+  <p class="sub">ประวัติศาสตร์ Data Model</p>
+  <div class="card">
+    <p>Data Model พัฒนามาตามยุคสมัยตั้งแต่ปี 1960 จนถึงรูปแบบที่ใช้ในปัจจุบัน</p>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-year">ค.ศ. 1960</div>
+      <div class="timeline-title">🌲 Hierarchical Model</div>
+      <div class="timeline-desc">โครงสร้างคล้ายต้นไม้กลับหัว (Upside-down tree) สร้างความสัมพันธ์แบบ Parent-Child (1:M)</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">ค.ศ. 1969</div>
+      <div class="timeline-title">🕸️ Network Model</div>
+      <div class="timeline-desc">พัฒนาขึ้นแก้ปัญหา Hierarchical โดยให้ Record หนึ่งมี Parent ได้มากกว่า 1 ตัว แต่มีความซับซ้อนสูง</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">ค.ศ. 1970</div>
+      <div class="timeline-title">📊 Relational Model</div>
+      <div class="timeline-desc">นำเสนอโดย <strong>E.F. Codd (IBM)</strong> ใช้ตาราง (Table) ประกอบด้วยแถว (Tuple) และคอลัมน์ (Attribute) ใช้คู่กับ RDBMS และ SQL</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">ค.ศ. 1976</div>
+      <div class="timeline-title">📐 Entity-Relationship Model</div>
+      <div class="timeline-desc">นำเสนอโดย <strong>Peter Chen</strong> ใช้แผนภาพ (ER Diagram) ช่วยให้นักออกแบบมองเห็นภาพรวมได้ง่ายขึ้นก่อนแปลงเป็น Relational Model</div>
+    </div>
+  </div>
+  <div class="box box-amber">
+    <h4>Key Takeaway</h4>
+    <p>ลำดับจำง่าย: Hierarchical (1960) → Network (1969) → Relational (1970, Codd) → ER Model (1976, Chen)</p>
+  </div>
+</div>
+
+<!-- 8 Examples -->
+<div class="section" id="s-examples">
+  <div class="section-num">8</div>
+  <h2>ตัวอย่างประกอบ</h2>
+  <p class="sub">ตัวอย่างจากอาจารย์</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">♂♀ ตัวอย่างที่ 1: สัญลักษณ์เพศ (Data Semantics)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>มนุษย์เข้าใจสัญลักษณ์ ♂ และ ♀ ทันทีว่าเป็นชายหรือหญิง แต่คอมพิวเตอร์ไม่เข้าใจ</p>
+      <div class="box box-cyan">
+        <h4>ตัวอย่าง</h4>
+        <p>ต้องมี Data Dictionary บอกความหมายว่า "F" ที่เก็บในระบบแปลว่า Female</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">🌡️ ตัวอย่างที่ 2: อุณหภูมิ กำไร อุบัติเหตุ (Logical/Abstract)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>สิ่งที่เป็นนามธรรมจับต้องไม่ได้ แต่สามารถแปลงเป็นข้อมูลกายภาพเพื่อจัดเก็บได้</p>
+      <div class="box box-cyan">
+        <h4>ตัวอย่าง</h4>
+        <p>อุณหภูมิวัดเป็นองศา / อุบัติเหตุบันทึกเป็นสถานที่เกิดเหตุ — ล้วนเป็น Logical Entity ที่เก็บข้อมูลได้</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">📝 ตัวอย่างที่ 3: can vs must (Data Constraint)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>"Student can enroll"</strong> → เป็นเพียงคุณลักษณะทั่วไป</p>
+      <p><strong>"Student must enroll"</strong> → เป็นการกำหนด Constraint ทันที (If-Then)</p>
+      <div class="box box-red">
+        <h4>ข้อควรระวัง</h4>
+        <p>คำว่า "must" คือสัญญาณบ่งบอก Constraint ในประโยค</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">📱 ตัวอย่างที่ 4: สมาร์ทโฟน/อีเมล/ลงทะเบียน (3 Types of Relationship)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <ul class="cl">
+        <li>นักเรียน 1 คน มีมือถือ 1 เครื่อง → <strong>1:1</strong></li>
+        <li>นักเรียน 1 คน มีหลายอีเมล → <strong>1:M</strong></li>
+        <li>นักเรียนหลายคน ลงทะเบียนหลายวิชา → <strong>M:N</strong></li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">🎒 ตัวอย่างที่ 5: Student attend classes (Active vs Passive)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>Forward:</strong> "นักเรียนหลายคนเข้าเรียนคลาส" → 1:M</p>
+      <p><strong>Backward:</strong> "คลาสหนึ่งถูกเรียนโดยนักเรียนหลายคน" → 1:M</p>
+      <div class="box box-purple">
+        <h4>สรุป</h4>
+        <p>รวมกัน = <strong>M:N</strong></p>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- 9 Dictionary -->
+<div class="section" id="s-dictionary">
+  <div class="section-num">9</div>
+  <h2>คำศัพท์สำคัญ (Dictionary)</h2>
+  <p class="sub">Key Terms ที่ต้องจำ</p>
+  <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>คำศัพท์</th><th>ความหมาย</th><th>ตัวอย่าง</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Data Modeling</strong></td><td>กระบวนการสร้างแบบจำลองข้อมูล</td><td>การร่าง ER Diagram</td></tr>
+        <tr><td><strong>Data Semantic</strong></td><td>ความหมายของข้อมูลที่แฝงอยู่</td><td>"M" หมายถึง Male</td></tr>
+        <tr><td><strong>Schema</strong></td><td>โครงสร้างหรือเค้าโครงของข้อมูล</td><td>Column Name ในตาราง</td></tr>
+        <tr><td><strong>Instance</strong></td><td>เนื้อข้อมูลจริงที่จัดเก็บตาม Schema</td><td>"101", "นายเอก"</td></tr>
+        <tr><td><strong>Entity</strong></td><td>ตัวแทนของสิ่งต่างๆ ในโลกจริง</td><td>Student, Classroom</td></tr>
+        <tr><td><strong>Attribute</strong></td><td>คุณลักษณะของ Entity</td><td>FirstName, LastName</td></tr>
+        <tr><td><strong>Relationship</strong></td><td>ความสัมพันธ์ระหว่าง Entity</td><td>นักเรียน "ลงทะเบียน"</td></tr>
+        <tr><td><strong>Constraint</strong></td><td>ข้อบังคับหรือเงื่อนไข</td><td>"ต้อง" ลงทะเบียน 5 วิชา</td></tr>
+        <tr><td><strong>Forward Analysis</strong></td><td>วิเคราะห์จากซ้ายไปขวา (Active Voice)</td><td>Student attends classes</td></tr>
+        <tr><td><strong>Backward Analysis</strong></td><td>วิเคราะห์จากขวามาซ้าย (Passive Voice)</td><td>Classes are attended by students</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 10 Exam Traps -->
+<div class="section" id="s-examtraps">
+  <div class="section-num">10</div>
+  <h2>จุดที่มักออกสอบ (Midterm)</h2>
+  <p class="sub">Exam Traps ที่ต้องระวัง</p>
+
+  <div class="box box-red">
+    <h4>⚠️ Trap 1: Physical vs Logical Entity</h4>
+    <p>ข้อสอบหลอกด้วยสิ่งนามธรรม/กระบวนการ เช่น "Enrollment", "Examination" → <strong>คำตอบคือเป็น Logical Entity ได้</strong> เพราะเป็น Process</p>
+  </div>
+
+  <div class="box box-red">
+    <h4>⚠️ Trap 2: Forward/Backward Analysis</h4>
+    <p>ให้ประโยคมาทางเดียว แล้วถามความสัมพันธ์จริง → ต้องวิเคราะห์ <strong>Passive Voice ย้อนกลับเสมอ</strong> เพื่อเช็คว่าเป็น M:N หรือไม่</p>
+  </div>
+
+  <div class="box box-red">
+    <h4>⚠️ Trap 3: แปลง Business Rule เป็น ERD</h4>
+    <p>ให้ Statement มา แล้วถามว่าคำใดเป็น Entity/Relationship หรือหา Attribute ที่ซ่อนอยู่ → ต้องแยก <strong>Noun = Entity, Verb = Relationship</strong></p>
+  </div>
+
+  <div class="box box-red">
+    <h4>⚠️ Trap 4: Schema vs Instance</h4>
+    <p>ต้องแยกให้ออก: <strong>Schema = โครงสร้าง</strong> (Column Name) ส่วน <strong>Instance = ข้อมูลดิบ</strong> (Raw Data) ที่อยู่ข้างใน</p>
+  </div>
+</div>
+
+<!-- 11 Flashcards -->
+<div class="section" id="s-flash">
+  <div class="section-num">11</div>
+  <h2>Flashcards</h2>
+  <p class="sub">คลิกเพื่อพลิกการ์ด - ทบทวนคำศัพท์</p>
+  <div class="fc-grid">
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Data Model</h4><p>เปรียบเสมือนสิ่งใด?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Data Model</h4><p><strong>พิมพ์เขียว (Blueprint)</strong> ที่ใช้สื่อสารระหว่างผู้บริหาร นักออกแบบ และโปรแกรมเมอร์</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Enrollment</h4><p>เป็น Entity ประเภทใด?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Logical/Intangible Entity</h4><p>เป็นกระบวนการ (Process) จับต้องไม่ได้ แต่เป็น Entity ได้</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Forward + Backward</h4><p>1:M + 1:M = ?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Many-to-Many (M:N)</h4><p>Forward 1:M + Backward 1:M = M:N</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>ER Model</h4><p>ใครนำเสนอ? ปีใด?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Peter Chen (1976)</h4><p>นำเสนอ Entity-Relationship Model ในปี ค.ศ. 1976</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>"must"</h4><p>ในประโยคบ่งบอกอะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Constraint</h4><p>ข้อบังคับหรือเงื่อนไข (If-Then)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Schema vs Instance</h4><p>ต่างกันอย่างไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Schema = โครงสร้าง | Instance = ข้อมูลดิบ</h4><p>Schema คือ Column Name, Instance คือ Raw Data ที่เติมลงไป</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Relational Model</h4><p>ใครนำเสนอ? ปีใด?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>E.F. Codd (IBM) - 1970</h4><p>ใช้ตาราง (Table) คู่กับ RDBMS และ SQL</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Backward Analysis</h4><p>ใช้ไวยากรณ์รูปแบบใด?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Passive Voice</h4><p>วิเคราะห์จากขวาไปซ้าย (กรรมถูกกระทำโดยประธาน)</p></div></div></div>
+  </div>
+</div>
+
+<!-- 12 Quiz -->
+<div class="section" id="s-quiz">
+  <div class="section-num">12</div>
+  <h2>Quiz ทดสอบความรู้</h2>
+  <p class="sub">20 ข้อ Multiple Choice - ตรวจคำตอบทันที</p>
+  <div id="quizWrap"></div>
+  <div class="quiz-score" id="quizScore">
+    <div class="sv" id="scoreVal">0/20</div>
+    <p style="color:var(--text2);margin-top:0.4rem;">คะแนนของคุณ</p>
+    <button class="btn btn-primary" style="margin-top:0.75rem;" onclick="resetQuiz()">ลองใหม่</button>
+  </div>
+</div>
+
+<!-- 13 Mind Map -->
+<div class="section" id="s-mindmap">
+  <div class="section-num">13</div>
+  <h2>Mind Map — Data Modeling & DBMS</h2>
+  <p class="sub">ภาพรวมสรุปเนื้อหา</p>
+  <div class="card">
+    <h3>🎯 ความสำคัญ</h3>
+    <ul class="cl">
+      <li>เป็นพิมพ์เขียว (Blueprint) ของระบบ</li>
+      <li>สื่อสารระหว่างผู้บริหาร นักออกแบบ โปรแกรมเมอร์</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>⚙️ ลำดับขั้นข้อมูล</h3>
+    <ul class="cl">
+      <li>Real World Fact → Media → Data</li>
+      <li>Data → DBMS → Database</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🧱 4 Building Blocks</h3>
+    <ul class="cl">
+      <li><strong>Entity</strong> (Physical/Logical/Abstract)</li>
+      <li><strong>Attribute</strong> (Schema, Column)</li>
+      <li><strong>Relationship</strong> (1:1, 1:M, M:N)</li>
+      <li><strong>Constraint</strong> (เงื่อนไข, Optional)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>📋 Business Rules</h3>
+    <ul class="cl">
+      <li>ประโยค Subject + Verb + Object</li>
+      <li>Noun → Entity, Verb → Relationship</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🔄 Relationship Analysis</h3>
+    <ul class="cl">
+      <li>Forward: ซ้าย→ขวา (Active Voice)</li>
+      <li>Backward: ขวา→ซ้าย (Passive Voice)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>📈 วิวัฒนาการ</h3>
+    <ul class="cl">
+      <li>Hierarchical Model (ต้นไม้กลับหัว)</li>
+      <li>Network Model (Parent หลายตัว)</li>
+      <li>Relational Model (E.F. Codd)</li>
+      <li>ER Model (Peter Chen)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 14 Cheat Sheet -->
+<div class="section" id="s-cheat">
+  <div class="section-num">14</div>
+  <h2>Cheat Sheet</h2>
+  <p class="sub">สรุปก่อนสอบ</p>
+  <div class="cheat">
+    <h3>Quick Reference - Data Modeling</h3>
+    <div class="cheat-grid">
+      <div class="cheat-item"><h4>กฎเหล็ก ER Diagram</h4><p>Entity = คำนาม | Relationship = คำกริยา | Constraint = "ต้อง"</p></div>
+      <div class="cheat-item"><h4>สูตรวิเคราะห์</h4><p>Forward(1:M) + Backward(1:M) = M:N</p></div>
+      <div class="cheat-item"><h4>Physical Entity</h4><p>จับต้องได้: คน, สถานที่, สินค้า</p></div>
+      <div class="cheat-item"><h4>Logical Entity</h4><p>นามธรรม/กระบวนการ: Enrollment, Accident</p></div>
+      <div class="cheat-item"><h4>Schema vs Instance</h4><p>Schema = โครงสร้าง (Column) | Instance = ข้อมูลดิบ</p></div>
+      <div class="cheat-item"><h4>Data Semantic</h4><p>ความหมายของข้อมูล ใช้ Data Dictionary แปล</p></div>
+      <div class="cheat-item"><h4>ERD</h4><p>Entity Relationship Diagram (Peter Chen, 1976)</p></div>
+      <div class="cheat-item"><h4>Forward Analysis</h4><p>Active Voice: ประธานกระทำกรรม</p></div>
+      <div class="cheat-item"><h4>Backward Analysis</h4><p>Passive Voice: กรรมถูกกระทำโดยประธาน</p></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer class="footer">
+  <p>Data Modeling & DBMS - Interactive Learning</p>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// Sidebar
+const sidebar = $('#sidebar'), overlay = $('#overlay');
+$('#menuBtn').onclick = () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); };
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+$$('.sidebar-nav a').forEach(a => a.addEventListener('click', () => { if(innerWidth<=768){sidebar.classList.remove('open');overlay.classList.remove('show');} }));
+
+// Active nav
+const secs = $$('.section'), navAs = $$('.sidebar-nav a');
+const onScroll = () => {
+  let cur = '';
+  secs.forEach(s => { if(scrollY >= s.offsetTop - 80) cur = s.id; });
+  navAs.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+  // progress
+  const h = document.documentElement.scrollHeight - innerHeight;
+  $('#progress').style.width = (scrollY / h * 100) + '%';
+  // btt
+  $('#btt').classList.toggle('show', scrollY > 400);
+};
+addEventListener('scroll', onScroll);
+
+// Collapse
+function toggleColl(h) { h.parentElement.classList.toggle('open'); }
+
+// Tabs
+function switchTab(e, id) {
+  const c = e.target.closest('.tabs');
+  c.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  c.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// Quiz Data
+const quizData = [
+  { q: "Data Model เปรียบเสมือนสิ่งใดในการออกแบบระบบ?", opts: ["หนังสือเรียน","พิมพ์เขียว (Blueprint)","เครื่องมือเขียนโค้ด","เซิร์ฟเวอร์"], ans: 1, exp: "พิมพ์เขียวเป็นตัวเชื่อมให้ทุกฝ่ายในองค์กรเข้าใจโครงสร้างตรงกัน" },
+  { q: 'หากต้องการให้คอมพิวเตอร์เข้าใจว่า "M" แปลว่า "Male" ต้องใช้อะไร?', opts: ["Database Management System","Active Voice","Data Dictionary","Forward Analysis"], ans: 2, exp: "Data Dictionary เก็บคำอธิบาย Data Semantics ให้เครื่องเข้าใจความหมาย" },
+  { q: 'ข้อใดคือ Entity ที่เป็น "กระบวนการ (Process)" หรือ Logical Object?', opts: ["ลูกค้า (Customer)","ห้องเรียน (Classroom)","การลงทะเบียน (Enrollment)","สินค้า (Product)"], ans: 2, exp: "การลงทะเบียนเป็นกระบวนการจับต้องไม่ได้ แต่จัดเป็น Logical Entity" },
+  { q: 'ในการเขียน Business Rules "คำกริยา (Verb)" จะถูกแปลงเป็นองค์ประกอบใด?', opts: ["Entity","Attribute","Relationship","Constraint"], ans: 2, exp: "คำกริยาแสดงการกระทำระหว่างวัตถุ จึงถูกแปลงเป็น Relationship" },
+  { q: "หากวิเคราะห์ Forward ได้ 1:M และ Backward ได้ 1:M ความสัมพันธ์แท้จริงคือแบบใด?", opts: ["1:1","1:M","M:N","ข้อมูลไม่เพียงพอ"], ans: 2, exp: "ไป 1:M กลับ 1:M สรุปเป็น Many-to-Many" },
+  { q: 'หากประโยคมีคำว่า "must (ต้อง)" หมายถึงองค์ประกอบใด?', opts: ["Constraint","Instance","Entity","Semantic"], ans: 0, exp: "Constraint คือข้อบังคับหรือเงื่อนไขบังคับของข้อมูล" },
+  { q: '"ID, Name, Email" จัดเป็นองค์ประกอบใด?', opts: ["Entity","Attribute","Relationship","Constraint"], ans: 1, exp: "เป็นคุณลักษณะที่อธิบาย Entity หรือ Column ในตาราง" },
+  { q: "ใครคือผู้นำเสนอ Entity-Relationship Model (ERM)?", opts: ["E.F. Codd","Bill Gates","Peter Chen","Steve Jobs"], ans: 2, exp: "Peter Chen นำเสนอ ER Model ในปี 1976" },
+  { q: 'แบบจำลองใดมีโครงสร้างคล้าย "ต้นไม้กลับหัว"?', opts: ["Relational Data Model","Entity Relationship Model","Network Data Model","Hierarchical Data Model"], ans: 3, exp: "Hierarchical Model มีโครงสร้างคล้าย Upside-down tree" },
+  { q: "Backward Analysis ใช้ไวยากรณ์รูปแบบใด?", opts: ["Active Voice","Passive Voice","Past Tense","Future Tense"], ans: 1, exp: "Backward ใช้ Passive Voice วิเคราะห์จากขวาไปซ้าย" },
+  { q: "สิ่งที่บรรจุเนื้อข้อมูลดิบ (Raw Data) เรียกว่าอะไร?", opts: ["Schema","Constraint","Instance","Semantic"], ans: 2, exp: "Instance คือเนื้อข้อมูลจริงที่นำไปใส่ในโครงสร้าง Schema" },
+  { q: "ความสัมพันธ์แบบ One-to-Many เขียนสัญลักษณ์อย่างไร?", opts: ["1:1","M:N","1:M","0:1"], ans: 2, exp: "One-to-Many เขียนเป็น 1:M" },
+  { q: "ข้อใดคือลักษณะสำคัญของ Business Rule ที่ดี?", opts: ["ต้องยาวมากๆ เพื่อครอบคลุม","ต้องเขียนเป็นโค้ดเท่านั้น","เป็นคำอธิบายสั้นๆ กระชับของหลักการ","ไม่จำเป็นต้องมีคำกริยา"], ans: 2, exp: "ประโยคต้องสั้น กระชับ มีประธาน กริยา กรรม" },
+  { q: 'รหัสวิชา "221 DB" นับเป็นองค์ประกอบใด?', opts: ["Schema","Instance","Attribute","Entity"], ans: 1, exp: "เป็นข้อมูลดิบ (Instance) ของ Attribute รหัสวิชา" },
+  { q: "ข้อใดไม่ใช่ Building Block ใน Data Model?", opts: ["Entity","Attribute","Semantic","Constraint"], ans: 2, exp: "Semantic คือความหมาย ไม่ใช่ Building Block (Block คือ Entity, Attribute, Relationship, Constraint)" },
+  { q: "ข้อดีสำคัญของ ER Diagram คืออะไร?", opts: ["ไม่ต้องพึ่งเซิร์ฟเวอร์","นำเสนอด้วยภาพกราฟิก สื่อสารเข้าใจง่าย","กินพื้นที่จัดเก็บน้อย","สามารถรันโปรแกรมได้เอง"], ans: 1, exp: "ERD เป็นเครื่องมือสื่อสารด้วยภาพ Visual ที่มีประสิทธิภาพสูง" },
+  { q: "การวิเคราะห์จากซ้ายไปขวาเรียกว่าอะไร?", opts: ["Forward Analysis","Backward Analysis","Horizontal Analysis","Vertical Analysis"], ans: 0, exp: "Forward Analysis คือการวิเคราะห์จากซ้ายไปขวา (Active Voice)" },
+  { q: "Relational Data Model ใช้คู่กับระบบใด?", opts: ["RDBMS","Hierarchical DB","Network DB","NoSQL"], ans: 0, exp: "Relational Model ใช้งานคู่กับ RDBMS และภาษา SQL" },
+  { q: '"อุบัติเหตุ" สามารถเป็น Entity ได้หรือไม่?', opts: ["ไม่ได้ เพราะจับต้องไม่ได้","ไม่ได้ เพราะคอมไม่รู้จัก","ได้ เพราะเป็น Logical Object","ได้ เพราะเป็น Tangible Object"], ans: 2, exp: "อุบัติเหตุเป็นนามธรรม จัดอยู่ในกลุ่ม Logical/Intangible Object ที่เป็น Entity ได้" },
+  { q: "ERD ย่อมาจากอะไร?", opts: ["Entity Record Data","Entity Relationship Diagram","Enterprise Relation Database","Electronic Record Database"], ans: 1, exp: "ERD = Entity Relationship Diagram" }
+];
+
+// Render Quiz
+function renderQuiz() {
+  const wrap = $('#quizWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  quizData.forEach((q, i) => {
+    const keys = ['A','B','C','D'];
+    const optsHtml = q.opts.map((o, j) =>
+      `<div class="quiz-opt" data-qi="${i}" data-oi="${j}" onclick="pickOpt(this)"><span class="opt-mark">${keys[j]}</span><span>${o}</span></div>`
+    ).join('');
+    wrap.innerHTML += `
+      <div class="quiz-q" data-idx="${i}" data-correct="${q.ans}">
+        <h4>ข้อ ${i+1}</h4>
+        <p class="qtext">${q.q}</p>
+        <div class="quiz-opts">${optsHtml}</div>
+        <div class="quiz-exp">${q.exp}</div>
+      </div>`;
+  });
+}
+
+const answers = {};
+let submitted = false;
+function pickOpt(el){
+  if(submitted) return;
+  const qi = parseInt(el.dataset.qi);
+  const oi = parseInt(el.dataset.oi);
+  const q = el.closest('.quiz-q');
+  q.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[qi] = oi;
+}
+
+function submitQuiz(){
+  if(submitted) return;
+  const qs = $$('.quiz-q');
+  let score=0, ans=0;
+  qs.forEach(q=>{
+    const ci = parseInt(q.dataset.correct);
+    const qi = parseInt(q.dataset.idx);
+    const opts = q.querySelectorAll('.quiz-opt');
+    if(answers[qi] !== undefined){
+      ans++;
+      opts.forEach((o,j)=>{ o.style.pointerEvents='none'; if(j===ci) o.classList.add('correct'); else if(j===answers[qi] && j!==ci) o.classList.add('wrong'); });
+      if(answers[qi]===ci) score++;
+      q.querySelector('.quiz-exp').classList.add('show');
+    }
+  });
+  if(ans < qs.length){ alert('กรุณาตอบคำถามให้ครบทุกข้อ'); return; }
+  submitted = true;
+  const sc = $('#quizScore'); sc.classList.add('show');
+  $('#scoreVal').textContent = (score===qs.length?'🎉 ':'') + score + '/' + qs.length;
+}
+
+function resetQuiz(){
+  submitted = false;
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  renderQuiz();
+  $$('.quiz-exp').forEach(e=>e.classList.remove('show'));
+  $('#quizScore').classList.remove('show');
+}
+
+// Search
+const sData = [
+  {t:'Data Modeling',c:'กระบวนการสร้างแบบจำลองข้อมูล Blueprint ER Diagram',s:'s-overview'},
+  {t:'ความสำคัญ Data Modeling',c:'ภาษากลาง ผู้บริหาร นักออกแบบ โปรแกรมเมอร์ Schema',s:'s-importance'},
+  {t:'กระบวนการสร้าง DB',c:'Real World Fact Media Data DBMS Database ลำดับขั้น',s:'s-process'},
+  {t:'Data Semantic',c:'Data Dictionary ความหมาย สัญลักษณ์ Male Female',s:'s-semantic'},
+  {t:'4 Building Blocks',c:'Entity Attribute Relationship Constraint Physical Logical',s:'s-blocks'},
+  {t:'Business Rules',c:'Forward Backward Active Passive Voice Noun Verb must',s:'s-rules'},
+  {t:'วิวัฒนาการ Data Models',c:'Hierarchical Network Relational Codd Peter Chen ER Model',s:'s-evolution'},
+  {t:'ตัวอย่างประกอบ',c:'เพศ อุณหภูมิ กำไร can must สมาร์ทโฟน อีเมล ลงทะเบียน',s:'s-examples'},
+  {t:'คำศัพท์สำคัญ',c:'Schema Instance Entity Attribute Relationship Constraint Forward Backward',s:'s-dictionary'},
+  {t:'จุดที่ออกสอบ',c:'Physical Logical Forward Backward Schema Instance Business Rule',s:'s-examtraps'},
+  {t:'Flashcards',c:'การ์ดทบทวน คำถามคำตอบ Data Model Blueprint',s:'s-flash'},
+  {t:'Quiz',c:'ทดสอบ Multiple Choice 20 ข้อ เฉลย',s:'s-quiz'},
+  {t:'Mind Map',c:'ภาพรวม สรุป Entity Attribute Relationship',s:'s-mindmap'},
+  {t:'Cheat Sheet',c:'สรุปก่อนสอบ Quick Reference ER Diagram Forward Backward',s:'s-cheat'},
+];
+const sIn = $('#searchIn'), sDrop = $('#searchDrop');
+sIn.addEventListener('input', e => {
+  const q = e.target.value.toLowerCase().trim();
+  if(q.length < 2){ sDrop.classList.remove('show'); return; }
+  const r = sData.filter(i => i.t.toLowerCase().includes(q) || i.c.toLowerCase().includes(q));
+  if(r.length){
+    sDrop.innerHTML = r.map(i=>`<div class="search-item" onclick="goSec('${i.s}')"><h4>${i.t}</h4><p>${i.c.substring(0,70)}...</p></div>`).join('');
+    sDrop.classList.add('show');
+  } else {
+    sDrop.innerHTML = '<div class="search-item"><p>ไม่พบผลลัพธ์</p></div>';
+    sDrop.classList.add('show');
+  }
+});
+function goSec(id){ sDrop.classList.remove('show'); sIn.value=''; document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+document.addEventListener('click', e => { if(!e.target.closest('.search-wrap')) sDrop.classList.remove('show'); });
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  renderQuiz();
+  onScroll();
+});
+</script>
+</body>
+</html>

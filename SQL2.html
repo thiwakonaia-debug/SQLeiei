@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS 1.2 - Introduction to Database Systems and Architecture</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --bg2: #161822;
+  --bg3: #1e2030;
+  --card: #1a1d2e;
+  --border: rgba(255,255,255,0.06);
+  --text: #e2e4ed;
+  --text2: #9ba0b8;
+  --muted: #5c6078;
+  --blue: #6c72cb;
+  --purple: #9b6dff;
+  --cyan: #38bdf8;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --sidebar-w: 260px;
+}
+
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--blue) var(--bg2); }
+body { font-family: 'Inter','Noto Sans Thai',sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg,var(--blue),var(--purple)); z-index: 9999; transition: width 0.1s; }
+
+.sidebar { position: fixed; top: 0; left: -280px; width: var(--sidebar-w); height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); z-index: 1000; transition: left 0.25s; overflow-y: auto; padding: 1.25rem 0; }
+.sidebar.open { left: 0; }
+.sidebar-head { padding: 0 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-head h3 { font-size: 0.95rem; font-weight: 700; }
+.sidebar-head p { font-size: 0.75rem; color: var(--muted); }
+.sidebar-nav a { display: block; padding: 9px 1.25rem; color: var(--text2); text-decoration: none; font-size: 0.85rem; border-left: 3px solid transparent; transition: 0.15s; }
+.sidebar-nav a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.sidebar-nav a.active { color: var(--blue); border-left-color: var(--blue); background: rgba(108,114,203,0.08); }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+.overlay.show { display: block; }
+
+.topbar { position: fixed; top: 0; left: 0; right: 0; height: 52px; background: rgba(15,17,23,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 998; display: flex; align-items: center; padding: 0 1rem; gap: 0.75rem; }
+.menu-btn { background: none; border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.menu-btn:hover { background: var(--bg3); }
+.search-wrap { flex: 1; max-width: 320px; margin-left: auto; }
+.search-wrap input { width: 100%; padding: 7px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; outline: none; font-family: inherit; }
+.search-wrap input::placeholder { color: var(--muted); }
+.search-wrap input:focus { border-color: var(--blue); }
+.search-dropdown { position: absolute; top: 48px; right: 1rem; width: 320px; max-height: 350px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; display: none; }
+.search-dropdown.show { display: block; }
+.search-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.search-item:last-child { border-bottom: none; }
+.search-item:hover { background: rgba(255,255,255,0.03); }
+.search-item h4 { font-size: 0.85rem; font-weight: 600; }
+.search-item p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+.main { padding: 72px 1.5rem 3rem; max-width: 860px; margin: 0 auto; }
+
+.hero { text-align: center; padding: 3rem 0 2rem; }
+.hero-badge { display: inline-block; padding: 5px 14px; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); border-radius: 20px; font-size: 0.8rem; color: var(--cyan); margin-bottom: 1.25rem; }
+.hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+.hero p { color: var(--text2); max-width: 560px; margin: 0 auto 1.5rem; font-size: 0.95rem; }
+.hero-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: 0.2s; }
+.btn-primary { background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost { background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { background: rgba(255,255,255,0.06); }
+.hero-stats { display: flex; justify-content: center; gap: 2.5rem; }
+.hero-stats .num { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
+.hero-stats .label { font-size: 0.8rem; color: var(--muted); }
+
+.section { margin-bottom: 3rem; }
+.section-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+.section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+.section .sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+.card p { color: var(--text2); line-height: 1.8; }
+.card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; }
+
+.box { border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+.box h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+.box p, .box ul { color: var(--text2); }
+.box ul { padding-left: 1.25rem; }
+.box li { margin-bottom: 0.4rem; }
+.box-blue { background: rgba(108,114,203,0.1); border: 1px solid rgba(108,114,203,0.2); }
+.box-blue h4 { color: var(--blue); }
+.box-cyan { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.15); }
+.box-cyan h4 { color: var(--cyan); }
+.box-amber { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15); }
+.box-amber h4 { color: var(--amber); }
+.box-red { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.15); }
+.box-red h4 { color: var(--red); }
+.box-pink { background: rgba(244,114,182,0.08); border: 1px solid rgba(244,114,182,0.15); }
+.box-pink h4 { color: var(--pink); }
+.box-purple { background: rgba(155,109,255,0.08); border: 1px solid rgba(155,109,255,0.15); }
+.box-purple h4 { color: var(--purple); }
+
+.coll { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.5rem; overflow: hidden; }
+.coll-head { padding: 0.85rem 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 0.9rem; user-select: none; }
+.coll-head:hover { background: rgba(255,255,255,0.02); }
+.coll-head .arr { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+.coll.open .coll-head .arr { transform: rotate(180deg); }
+.coll-body { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+.coll.open .coll-body { max-height: 5000px; }
+.coll-inner { padding: 0 1.25rem 1.25rem; color: var(--text2); }
+.coll-inner p { margin-bottom: 0.6rem; }
+.coll-inner ul { padding-left: 1.25rem; }
+.coll-inner li { margin-bottom: 0.4rem; }
+
+table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.85rem; }
+thead { background: linear-gradient(135deg,var(--blue),var(--purple)); }
+th { padding: 10px 14px; text-align: left; font-weight: 600; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text2); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.tabs { margin: 1rem 0; }
+.tab-btns { display: flex; gap: 3px; background: var(--bg3); border-radius: 8px; padding: 3px; margin-bottom: 0.75rem; }
+.tab-btn { padding: 7px 14px; border-radius: 6px; border: none; background: none; color: var(--text2); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.tab-btn.active { background: var(--blue); color: #fff; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+.hier { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; margin: 1.5rem 0; }
+.hier-step { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 420px; }
+.hier-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: rgba(108,114,203,0.15); }
+.hier-step:nth-child(3) .hier-icon { background: rgba(56,189,248,0.15); }
+.hier-step:nth-child(5) .hier-icon { background: rgba(155,109,255,0.15); }
+.hier-step:nth-child(7) .hier-icon { background: rgba(244,114,182,0.15); }
+.hier-text h5 { font-size: 0.85rem; font-weight: 600; }
+.hier-text p { font-size: 0.75rem; color: var(--muted); }
+.hier-arr { color: var(--muted); font-size: 0.9rem; }
+
+.flow { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin: 1.5rem 0; padding: 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; }
+.flow-item { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; text-align: center; }
+.flow-item:nth-child(1) { background: rgba(108,114,203,0.15); color: var(--blue); }
+.flow-item:nth-child(3) { background: rgba(56,189,248,0.15); color: var(--cyan); }
+.flow-item:nth-child(5) { background: rgba(155,109,255,0.15); color: var(--purple); }
+.flow-item:nth-child(7) { background: rgba(244,114,182,0.15); color: var(--pink); }
+.flow-arrow { color: var(--muted); }
+
+.er { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin: 1.5rem 0; padding: 1.5rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; }
+.entity { background: var(--bg2); border: 2px solid var(--blue); border-radius: 10px; min-width: 200px; overflow: hidden; }
+.entity-head { padding: 0.6rem 0.75rem; text-align: center; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; }
+.entity.purple { border-color: var(--purple); }
+.entity.purple .entity-head { background: linear-gradient(135deg,var(--purple),var(--pink)); }
+.entity.cyan { border-color: var(--cyan); }
+.entity.cyan .entity-head { background: linear-gradient(135deg,var(--cyan),var(--blue)); }
+.entity.amber { border-color: var(--amber); }
+.entity.amber .entity-head { background: linear-gradient(135deg,var(--amber),var(--red)); }
+.entity-field { padding: 6px 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+.entity-field:last-child { border-bottom: none; }
+.pk { color: var(--amber); font-weight: 700; font-size: 0.65rem; padding: 1px 5px; background: rgba(251,191,36,0.12); border-radius: 3px; }
+.fk { color: var(--cyan); font-weight: 700; font-size: 0.65rem; padding: 1px 5px; background: rgba(56,189,248,0.12); border-radius: 3px; }
+.er-link { display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 1.5rem; }
+
+.sql { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 0.75rem 0; }
+.sql-head { padding: 8px 14px; background: rgba(108,114,203,0.1); border-bottom: 1px solid var(--border); font-size: 0.8rem; font-weight: 600; color: var(--blue); }
+.sql-body { padding: 0.75rem 1rem; }
+.sql-body pre { font-family: 'JetBrains Mono',monospace; font-size: 0.8rem; color: var(--cyan); line-height: 1.8; white-space: pre-wrap; }
+.sk { color: var(--purple); font-weight: 600; }
+.ss { color: var(--green); }
+.sc { color: var(--muted); font-style: italic; }
+
+.fc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; margin: 1rem 0; }
+.fc { perspective: 800px; height: 170px; cursor: pointer; }
+.fc-inner { position: relative; width: 100%; height: 100%; transition: transform 0.45s; transform-style: preserve-3d; }
+.fc.flipped .fc-inner { transform: rotateY(180deg); }
+.fc-front, .fc-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem; text-align: center; border: 1px solid var(--border); }
+.fc-front { background: rgba(108,114,203,0.1); }
+.fc-back { background: rgba(56,189,248,0.08); transform: rotateY(180deg); }
+.fc-front h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+.fc-front p { font-size: 0.8rem; color: var(--muted); }
+.fc-back h4 { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.3rem; }
+.fc-back p { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+.fc-hint { position: absolute; bottom: 10px; font-size: 0.7rem; color: var(--muted); }
+
+.quiz-q { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+.quiz-q h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; }
+.quiz-q .qtext { font-weight: 600; margin-bottom: 0.75rem; }
+.quiz-opts { display: flex; flex-direction: column; gap: 0.4rem; }
+.quiz-opt { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; transition: 0.15s; }
+.quiz-opt:hover { background: rgba(255,255,255,0.03); border-color: var(--blue); }
+.quiz-opt.selected { background: rgba(108,114,203,0.12); border-color: var(--blue); }
+.quiz-opt.correct { background: rgba(52,211,153,0.12); border-color: var(--green); color: var(--green); }
+.quiz-opt.wrong { background: rgba(248,113,113,0.12); border-color: var(--red); color: var(--red); }
+.opt-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.75rem; flex-shrink: 0; }
+.quiz-exp { margin-top: 0.75rem; padding: 0.75rem; background: var(--bg3); border-radius: 8px; display: none; font-size: 0.85rem; color: var(--text2); }
+.quiz-exp.show { display: block; }
+.quiz-submit { display: block; width: 100%; padding: 11px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 0.75rem; font-family: inherit; }
+.quiz-score { text-align: center; padding: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-top: 0.75rem; display: none; }
+.quiz-score.show { display: block; }
+.quiz-score .sv { font-size: 2.5rem; font-weight: 900; color: var(--blue); }
+
+.cheat { background: rgba(108,114,203,0.06); border: 1px solid rgba(108,114,203,0.15); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+.cheat h3 { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--blue); }
+.cheat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; }
+.cheat-item { padding: 0.75rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.cheat-item h4 { font-size: 0.8rem; font-weight: 700; color: var(--blue); margin-bottom: 0.3rem; }
+.cheat-item p { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+
+.btt { position: fixed; bottom: 24px; right: 24px; width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; border: none; font-size: 1.1rem; cursor: pointer; z-index: 997; opacity: 0; visibility: hidden; transform: translateY(12px); transition: 0.25s; display: flex; align-items: center; justify-content: center; }
+.btt.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.btt:hover { opacity: 0.85; }
+
+.footer { text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--border); margin-top: 3rem; color: var(--muted); font-size: 0.8rem; }
+
+.cl { padding-left: 1.25rem; margin: 0.4rem 0; }
+.cl li { margin-bottom: 0.4rem; color: var(--text2); line-height: 1.7; }
+.cl li strong { color: var(--text); }
+strong { color: var(--text); }
+
+@media (max-width: 768px) {
+  .main { padding: 64px 1rem 2rem; }
+  .hero h1 { font-size: 1.6rem; }
+  .hero-stats { gap: 1.5rem; }
+  .flow { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+  .er { flex-direction: column; align-items: center; }
+  .er-link { transform: rotate(90deg); }
+  .fc-grid { grid-template-columns: 1fr; }
+  .cheat-grid { grid-template-columns: 1fr; }
+  .section h2 { font-size: 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div class="overlay" id="overlay"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <h3>DBMS 1.2</h3>
+    <p>Database Systems & Architecture</p>
+  </div>
+  <div class="sidebar-nav" id="sideNav">
+    <a href="#s-overview" class="active">ภาพรวมบทเรียน</a>
+    <a href="#s-objectives">วัตถุประสงค์</a>
+    <a href="#s-keyconcepts">แนวคิดสำคัญ</a>
+    <a href="#s-terms">คำศัพท์</a>
+    <a href="#s-careers">สายอาชีพ</a>
+    <a href="#s-components">องค์ประกอบ 5 ประการ</a>
+    <a href="#s-functions">หน้าที่ของ DBMS</a>
+    <a href="#s-design">การออกแบบข้อมูล</a>
+    <a href="#s-formats">โครงสร้างข้อมูล & XML</a>
+    <a href="#s-examples">ตัวอย่างประกอบ</a>
+    <a href="#s-er">ER Diagram</a>
+    <a href="#s-flash">Flashcards</a>
+    <a href="#s-quiz">Quiz</a>
+    <a href="#s-cheat">Cheat Sheet</a>
+    <a href="#s-exam">Exam Notes</a>
+  </div>
+</nav>
+
+<div class="topbar">
+  <button class="menu-btn" id="menuBtn">&#9776;</button>
+  <div class="search-wrap" style="position:relative;">
+    <input type="text" id="searchIn" placeholder="ค้นหาเนื้อหา..." />
+    <div class="search-dropdown" id="searchDrop"></div>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-badge">Database Management Systems</div>
+  <h1>บทนำสู่ระบบฐานข้อมูล<br>และสถาปัตยกรรม</h1>
+  <p>เรียนรู้พื้นฐานของระบบฐานข้อมูล ตั้งแต่วิวัฒนาการของข้อมูล องค์ประกอบของ DBMS ไปจนถึงการออกแบบฐานข้อมูลและการส่งต่อข้อมูลข้ามระบบด้วย XML</p>
+  <div class="hero-btns">
+    <a href="#s-overview" class="btn btn-primary">เริ่มเรียนเลย</a>
+    <a href="#s-quiz" class="btn btn-ghost">ทดสอบความรู้</a>
+  </div>
+  <div class="hero-stats">
+    <div><div class="num">15</div><div class="label">หัวข้อเรียน</div></div>
+    <div><div class="num">10</div><div class="label">Flashcards</div></div>
+    <div><div class="num">4</div><div class="label">Quiz ข้อ</div></div>
+  </div>
+</section>
+
+<!-- 1 Overview -->
+<div class="section" id="s-overview">
+  <div class="section-num">1</div>
+  <h2>ภาพรวมบทเรียน</h2>
+  <p class="sub">บทนี้เรียนเรื่องอะไร?</p>
+  <div class="card">
+    <p>บทนี้ปูพื้นฐานความเข้าใจเกี่ยวกับแนวคิดของ <strong>ระบบฐานข้อมูล (Database Systems)</strong> ตั้งแต่จุดเริ่มต้นของข้อมูล (Data) ไปจนถึงการใช้ซอฟต์แวร์บริหารจัดการฐานข้อมูล (DBMS) ตลอดจนแนะนำบทบาทหน้าที่สายอาชีพด้านฐานข้อมูล องค์ประกอบของระบบ ปัญหาของการเก็บข้อมูลแบบแฟ้มข้อมูลเดิม รูปแบบของข้อมูล และการส่งต่อข้อมูลข้ามระบบด้วยภาษา XML</p>
+  </div>
+  <div class="card">
+    <h3>วิวัฒนาการของข้อมูล (Data Evolution)</h3>
+    <div class="flow">
+      <div class="flow-item">Data Object<br><small>Raw Fact เช่น นักศึกษา</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Data<br><small>Schema + Instance</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">Database<br><small>ตาราง & ไฟล์</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-item">DBMS<br><small>MS-SQL, MySQL, Oracle</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2 Objectives -->
+<div class="section" id="s-objectives">
+  <div class="section-num">2</div>
+  <h2>วัตถุประสงค์การเรียนรู้</h2>
+  <p class="sub">หลังเรียนจบบทนี้ ผู้เรียนควรจะสามารถ:</p>
+  <div class="card">
+    <ul class="cl">
+      <li>แยกความแตกต่างระหว่าง <strong>Data</strong>, <strong>Database</strong> และ <strong>Database System (DBMS)</strong> ได้อย่างถูกต้อง</li>
+      <li>เข้าใจโครงสร้าง องค์ประกอบ 5 ประการ และหน้าที่หลักของระบบบริหารจัดการฐานข้อมูล</li>
+      <li>ตระหนักถึงปัญหา <strong>Island of Information</strong>, <strong>Sparse Data</strong> และ <strong>Data Inconsistency</strong> พร้อมแนวทางแก้ไข</li>
+      <li>เข้าใจความสำคัญของรูปแบบข้อมูล (<strong>Data Format</strong>) และการประยุกต์ใช้ <strong>XML</strong> ในการแลกเปลี่ยนข้อมูลข้ามองค์กร</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 3 Key Concepts -->
+<div class="section" id="s-keyconcepts">
+  <div class="section-num">3</div>
+  <h2>แนวคิดสำคัญ</h2>
+  <p class="sub">Key Concepts ที่ต้องเข้าใจ</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">1. วิวัฒนาการของข้อมูล (Data Evolution)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ข้อมูลมีการพัฒนาตามลำดับขั้นตอน เริ่มจากสิ่งที่เป็นวัตถุดิบไปจนถึงซอฟต์แวร์ที่ใช้จัดการ:</p>
+      <div class="hier">
+        <div class="hier-step"><div class="hier-icon">📦</div><div class="hier-text"><h5>Data Object</h5><p>ข้อเท็จจริงดิบ (Raw Fact) เช่น นักศึกษา, พนักงาน</p></div></div>
+        <div class="hier-arr">↓</div>
+        <div class="hier-step"><div class="hier-icon">📋</div><div class="hier-text"><h5>Data</h5><p>มีโครงสร้าง Schema (ID, Name) และ Instance (101, Ake)</p></div></div>
+        <div class="hier-arr">↓</div>
+        <div class="hier-step"><div class="hier-icon">🗄️</div><div class="hier-text"><h5>Database</h5><p>ฐานข้อมูลรูปแบบตารางและไฟล์ เช่น student.dat, .mdb</p></div></div>
+        <div class="hier-arr">↓</div>
+        <div class="hier-step"><div class="hier-icon">⚙️</div><div class="hier-text"><h5>DBMS</h5><p>ซอฟต์แวร์จัดการ เช่น MS-SQL, MySQL, Oracle</p></div></div>
+      </div>
+      <div class="box box-amber">
+        <h4>ข้อควรระวัง</h4>
+        <p><strong>Data Object</strong> คือสิ่งที่เราจะเก็บ (เทียบเท่า Entity) เช่น นักศึกษา, สินค้า ส่วน <strong>Schema</strong> คือโครงสร้าง (เทียบเท่า Attribute) เช่น ID, Name และ <strong>Instance</strong> คือข้อมูลจริงๆ เช่น 101, Ake</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">2. Database vs DBMS<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <div class="tabs">
+        <div class="tab-btns">
+          <button class="tab-btn active" onclick="switchTab(event,'tp-db')">Database</button>
+          <button class="tab-btn" onclick="switchTab(event,'tp-dbms')">DBMS</button>
+        </div>
+        <div class="tab-pane active" id="tp-db"><div class="card"><h3>Database (ฐานข้อมูล)</h3><p>แหล่งเก็บข้อมูลทางกายภาพ (ไฟล์บนดิสก์) เป็นที่ที่ข้อมูลถูกจัดเก็บจริงๆ เช่น ไฟล์ student.dat, .mdb</p></div></div>
+        <div class="tab-pane" id="tp-dbms"><div class="card"><h3>DBMS (ระบบบริหารจัดการฐานข้อมูล)</h3><p>ซอฟต์แวร์ที่ติดตั้งบนเซิร์ฟเวอร์เพื่อเป็นตัวกลางในการเชื่อมต่อ บริหารจัดการ และดูแลความปลอดภัยให้กับข้อมูล เช่น MS-SQL Server, MySQL, Oracle</p></div></div>
+      </div>
+      <div class="box box-red">
+        <h4>ข้อผิดพลาดที่พบบ่อย</h4>
+        <p>อย่าสับสนระหว่าง Database กับ DBMS! <strong>Database</strong> คือตัว "ข้อมูล" ที่ถูกจัดเก็บ แต่ <strong>DBMS</strong> คือตัว "ซอฟต์แวร์/ระบบ" ที่เข้าไปควบคุมบริหารจัดการ</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">3. Island of Information<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ปัญหา Island of Information เกิดจากการที่แต่ละแผนกต่างคนต่างเก็บแฟ้มข้อมูลของตนเอง (เช่น ใช้ไฟล์ Excel แยกกัน) ทำให้ข้อมูลไม่เชื่อมโยงกันและเกิดความซ้ำซ้อน</p>
+      <div class="box box-cyan">
+        <h4>วิธีแก้ไข</h4>
+        <p>การใช้ระบบฐานข้อมูลรวมศูนย์ (Centralized Database) ช่วยแก้ปัญหานี้ได้ โดยเชื่อมโยงข้อมูลทั้งหมดเข้าไว้ในที่เดียว</p>
+      </div>
+      <div class="box box-red">
+        <h4>ปัญหาที่ตามมา</h4>
+        <ul>
+          <li><strong>Data Inconsistency:</strong> ข้อมูลไม่สอดคล้องกัน เช่น การสะกดชื่อต่างกัน หรือการใช้คำย่อกับคำเต็มปะปนกัน</li>
+          <li><strong>Data Redundancy:</strong> ข้อมูลซ้ำซ้อน ทำให้สิ้นเปลืองพื้นที่จัดเก็บ</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">4. Dense Data vs Sparse Data<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>การออกแบบตารางที่ดีควรให้ได้ข้อมูลที่มีความหนาแน่น เพื่อประหยัดพื้นที่จัดเก็บบนเซิร์ฟเวอร์</p>
+      <div class="tabs">
+        <div class="tab-btns">
+          <button class="tab-btn active" onclick="switchTab(event,'tp-sparse')">Sparse Data</button>
+          <button class="tab-btn" onclick="switchTab(event,'tp-dense')">Dense Data</button>
+        </div>
+        <div class="tab-pane active" id="tp-sparse"><div class="card"><h3>Sparse Data (ข้อมูลเบาบาง)</h3><p>มีช่องว่างมากเกินไปในตาราง ทำให้สูญเสียพื้นที่บนเซิร์ฟเวอร์โดยเปล่าประโยชน์ เกิดจากการนำ Data Object หลายเรื่องมารวมในตารางเดียวกัน</p></div></div>
+        <div class="tab-pane" id="tp-dense"><div class="card"><h3>Dense Data (ข้อมูลหนาแน่น)</h3><p>มีข้อมูลครบทุกช่อง เป็นเป้าหมายสูงสุดของการออกแบบตาราง ทำได้โดยการแยก Object ต่าง类型กันออกเป็นหลายๆ ตาราง</p></div></div>
+      </div>
+      <div class="box box-amber">
+        <h4>วิธีแก้ Sparse Data</h4>
+        <p>ต้องวิเคราะห์และแยก Object ออกจากกัน เช่น ตารางพนักงาน ตารางทักษะ ตารางประกาศนียบัตร แยกกันคนละตาราง เพื่อให้ได้ Dense Data</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">5. Data Integrity & Inconsistency<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ฐานข้อมูลที่ดีต้องมีความสมบูรณ์ถูกต้องของข้อมูล (Integrity) ตลอดเวลา และต้องป้องกันปัญหาข้อมูลไม่สอดคล้องกัน (Inconsistency)</p>
+      <div class="box box-red">
+        <h4>ตัวอย่าง Inconsistency</h4>
+        <ul>
+          <li>มีคนพิมพ์ชื่อ Peter พลาดเป็น <strong>Pter</strong></li>
+          <li>พิมพ์ตัวย่อ <strong>DB</strong> กับ <strong>Database</strong> สลับกันในฐานข้อมูลเดียวกัน</li>
+        </ul>
+      </div>
+      <div class="box box-cyan">
+        <h4>วิธีป้องกัน</h4>
+        <p>บังคับใช้โครงสร้าง Schema ที่ชัดเจนและอ้างอิงจาก <strong>Data Dictionary</strong> (พจนานุกรมข้อมูล) เพื่อให้ทุกคนใช้คำศัพท์เดียวกัน</p>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- 4 Terms -->
+<div class="section" id="s-terms">
+  <div class="section-num">4</div>
+  <h2>คำศัพท์สำคัญ</h2>
+  <p class="sub">Terms ที่ต้องจำ</p>
+  <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>คำศัพท์</th><th>ความหมาย</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Data Object</strong></td><td>สิ่งที่เราสนใจจัดเก็บข้อมูล (เทียบเท่า Entity) เช่น นักศึกษา, พนักงาน</td></tr>
+        <tr><td><strong>Schema</strong></td><td>โครงสร้างของข้อมูล (เทียบเท่า Attribute) เช่น รหัสนักศึกษา (ID), ชื่อ (Name)</td></tr>
+        <tr><td><strong>Instance</strong></td><td>ข้อมูลที่เกิดขึ้นจริงในแต่ละระเบียน เช่น รหัส 101, ชื่อ Ake</td></tr>
+        <tr><td><strong>DBMS</strong></td><td>ซอฟต์แวร์ที่ใช้บริหารจัดการฐานข้อมูล เช่น MS-SQL Server, MySQL, Oracle</td></tr>
+        <tr><td><strong>Meta Data</strong></td><td>ข้อมูลที่ใช้อธิบายข้อมูลอีกทีหนึ่ง (Data about Data)</td></tr>
+        <tr><td><strong>Business Logic</strong></td><td>กฎเกณฑ์หรือเงื่อนไขทางธุรกิจที่ใช้ควบคุมความหมายและการทำงานของข้อมูล</td></tr>
+        <tr><td><strong>Data Dictionary</strong></td><td>พจนานุกรมข้อมูล รวบรวมคำศัพท์และความหมายของฐานข้อมูล</td></tr>
+        <tr><td><strong>Data Transformation</strong></td><td>การแปลงรูปแบบข้อมูลจากที่จัดเก็บจริงให้แสดงผลในรูปแบบที่ผู้ใช้ต้องการ</td></tr>
+        <tr><td><strong>Multiuser Access Control</strong></td><td>ระบบควบคุมการประมวลผลและการเข้าถึงข้อมูลกรณีมีผู้ใช้หลายคนพร้อมกัน</td></tr>
+        <tr><td><strong>API</strong></td><td>ชุดคำสั่งที่ทำหน้าที่เป็นตัวกลางเชื่อมต่อฐานข้อมูลเข้ากับ Service หรือ Software อื่นๆ</td></tr>
+        <tr><td><strong>XML</strong></td><td>ภาษามาร์กอัปที่ใช้กำหนดแท็กข้อตกลงในการส่งต่อข้อมูลข้ามองค์กร</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 5 Careers -->
+<div class="section" id="s-careers">
+  <div class="section-num">5</div>
+  <h2>สายอาชีพในสายงานฐานข้อมูล</h2>
+  <p class="sub">Database Careers</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">1. Database Administrator (DBA)<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ผู้ดูแลระบบและติดตั้งซอฟต์แวร์ DBMS เป็นสายงานที่มีเงินเดือนสูงสุด (ประมาณ 50,000 บาทขึ้นไปสำหรับเริ่มต้น)</p>
+      <div class="box box-blue">
+        <h4>หน้าที่หลัก</h4>
+        <ul>
+          <li>ดูแลภาพรวมของระบบฐานข้อมูลทั้งหมด</li>
+          <li>ดูแลความปลอดภัยของข้อมูล</li>
+          <li>ดูแลรักษาเซิร์ฟเวอร์</li>
+          <li>ติดตั้งและดูแลซอฟต์แวร์ DBMS</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">2. Database Designer<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>นักออกแบบฐานข้อมูล ทำหน้าที่วิเคราะห์ว่าในธุรกิจมี Data Object อะไรบ้าง และเขียนโครงสร้างออกมา มีรายได้รองลงมา (ประมาณ 30,000 บาท)</p>
+      <div class="box box-purple">
+        <h4>หน้าที่หลัก</h4>
+        <ul>
+          <li>วิเคราะห์ Data Object ทั้งหมดในองค์กร</li>
+          <li>ออกแบบโครงสร้างตาราง (Schema)</li>
+          <li>กำหนดความสัมพันธ์ระหว่างตาราง</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">3. Database Developer<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>นักพัฒนาผู้เขียนโปรแกรม (เช่น สร้างเว็บไซต์หรือ UI) ดึงข้อมูลไปใช้งาน เป็นผู้มีความรู้ระดับโครงสร้างตารางทั่วไป รายได้เริ่มต้นต่ำสุดในสามกลุ่ม (ประมาณ 20,000 บาท)</p>
+      <div class="box box-green" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);">
+        <h4 style="color:var(--green);">หน้าที่หลัก</h4>
+        <ul>
+          <li>เขียนโปรแกรมเชื่อมต่อกับฐานข้อมูล</li>
+          <li>สร้าง UI สำหรับแสดงข้อมูล</li>
+          <li>ดึงข้อมูลจาก DB มาใช้งาน</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="card" style="margin-top:0.75rem;">
+    <h3>เปรียบเทียบรายได้</h3>
+    <div class="hier">
+      <div class="hier-step"><div class="hier-icon">💰</div><div class="hier-text"><h5>DBA - ~50,000+ บาท</h5><p>ดูแลระบบ ความปลอดภัยทั้งหมด</p></div></div>
+      <div class="hier-arr">↓</div>
+      <div class="hier-step"><div class="hier-icon">💰</div><div class="hier-text"><h5>Designer - ~30,000 บาท</h5><p>ออกแบบโครงสร้างตาราง</p></div></div>
+      <div class="hier-arr">↓</div>
+      <div class="hier-step"><div class="hier-icon">💰</div><div class="hier-text"><h5>Developer - ~20,000 บาท</h5><p>เขียนโปรแกรมใช้งาน</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 Components -->
+<div class="section" id="s-components">
+  <div class="section-num">6</div>
+  <h2>องค์ประกอบของสภาพแวดล้อมฐานข้อมูล</h2>
+  <p class="sub">5 Components of Database Environment</p>
+  <div class="card">
+    <p>ระบบฐานข้อมูลมีองค์ประกอบ 5 ประการหลักที่ทำงานร่วมกัน หากข้อสอบถาม ต้องตอบให้ครบถ้วน:</p>
+  </div>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">1. Hardware<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>อุปกรณ์ทางกายภาพ เช่น เครื่องเซิร์ฟเวอร์ ฮาร์ดดิสก์ หน่วยความจำ RAM ที่ใช้ในการเก็บและประมวลผลข้อมูล</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">2. Software<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ตัวโปรแกรม DBMS ซอฟต์แวร์ระบบปฏิบัติการ และซอฟต์แวร์-application ที่ใช้เชื่อมต่อกับฐานข้อมูล</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">3. People<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ผู้ที่เกี่ยวข้องทั้งหมด เช่น DBA, Developer, Designer และ User ผู้ใช้งานทั่วไป</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">4. Procedure/Function<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ขั้นตอนการทำงานและหน้าที่ต่างๆ ภายในระบบ รวมถึงกฎเกณฑ์การใช้งาน</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">5. Data & Business Logic<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ตัวข้อเท็จจริงที่เก็บรวบรวมไว้ รวมถึง "เงื่อนไขทางธุรกิจ" ซึ่งจะแตกต่างกันไปตามบริบทของแต่ละองค์กร</p>
+      <div class="box box-amber">
+        <h4>ตัวอย่าง Business Logic</h4>
+        <p>มหาวิทยาลัยมหิดลอาจกำหนดว่านักศึกษาที่มี GPA &gt; 2 ลงทะเบียนได้ 5 ตัว แต่มหาวิทยาลัยอื่นอาจให้ลงทะเบียนได้ 8 ตัว นี่คือกฎเกณฑ์เฉพาะที่ไม่เหมือนกันในแต่ละองค์กร</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="er" style="margin-top:1rem;">
+    <div class="entity">
+      <div class="entity-head">Hardware</div>
+      <div class="entity-field">Server</div>
+      <div class="entity-field">Hard Disk</div>
+      <div class="entity-field">RAM</div>
+    </div>
+    <div class="entity purple">
+      <div class="entity-head">Software</div>
+      <div class="entity-field">DBMS</div>
+      <div class="entity-field">OS</div>
+      <div class="entity-field">Application</div>
+    </div>
+    <div class="entity cyan">
+      <div class="entity-head">People</div>
+      <div class="entity-field">DBA</div>
+      <div class="entity-field">Developer</div>
+      <div class="entity-field">User</div>
+    </div>
+  </div>
+  <div class="er" style="margin-top:0;">
+    <div class="entity amber">
+      <div class="entity-head">Procedure</div>
+      <div class="entity-field">Rules</div>
+      <div class="entity-field">Workflow</div>
+    </div>
+    <div class="entity">
+      <div class="entity-head">Data & Business Logic</div>
+      <div class="entity-field">Raw Data</div>
+      <div class="entity-field">Business Rules</div>
+      <div class="entity-field">Constraints</div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 Functions -->
+<div class="section" id="s-functions">
+  <div class="section-num">7</div>
+  <h2>หน้าที่หลักของ DBMS</h2>
+  <p class="sub">DBMS Functions</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">1. Data Dictionary Management<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>การจัดการพจนานุกรมข้อมูลเพื่อกำหนดความหมายของข้อมูลแต่ละตัว ป้องกันความสับสนเรื่องคำศัพท์</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">2. Data Storage Management<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>บริหารพื้นที่การจัดเก็บข้อมูลบนฮาร์ดดิสก์ จัดการโครงสร้างไฟล์และดัชนี</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">3. Data Transformation<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>การแปลงรูปแบบข้อมูล เช่น ในตารางเก็บปีแบบคริสตศักราช แต่เวลาแสดงบนเว็บไซต์ดึงข้อมูลด้วยคำสั่ง SQL แปลงให้แสดงเป็นพุทธศักราชและแสดงชื่อเดือนแบบเต็ม</p>
+      <div class="sql">
+        <div class="sql-head">ตัวอย่าง Data Transformation ด้วย SQL</div>
+        <div class="sql-body"><pre><span class="sc">-- แปลงวันเกิดจากคริสตศักราชเป็นพุทธศักราช</span>
+<span class="sk">SELECT</span> name,
+       <span class="sk">CONCAT</span>(
+         <span class="sk">YEAR</span>(birthdate) + <span class="ss">543</span>,
+         <span class="ss">' '</span>,
+         <span class="sk">MONTHNAME</span>(birthdate),
+         <span class="ss">' '</span>,
+         <span class="sk">DAY</span>(birthdate)
+       ) <span class="sk">AS</span> buddhist_date
+<span class="sk">FROM</span> student;</pre></div>
+      </div>
+      <div class="box box-cyan">
+        <h4>ทำไมใช้ SQL ไม่ใช้ Python หรือ C?</h4>
+        <p>เพราะสามารถให้ฝั่งหลังบ้าน Database จัดการได้เลยผ่านคำสั่ง SQL ทำให้รวดเร็วและเป็นศูนย์กลาง ไม่ต้องพึ่งพาภาษาโปรแกรมหน้าบ้าน</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">4. Security Management<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>การจัดการความปลอดภัย เพื่อป้องกันไม่ให้ข้อมูลสูญหายหรือถูกดัดแปลงง่ายๆ เหมือนที่เกิดกับการใช้ไฟล์ Excel ธรรมดา</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">5. Multiuser Access Control<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>การดูแลให้ผู้ใช้หลายคน (Multiuser) สามารถใช้งานพร้อมกันได้โดยระบบไม่พัง จัดการเรื่อง Concurrent Access</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">6. Backup & Recovery<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>สามารถกู้คืนข้อมูลให้กลับสู่สภาวะปกติ (Recover) ได้หากเซิร์ฟเวอร์มีปัญหาหรือแครช (Crash)</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">7. Data Integrity Management<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>คงสภาพความสมบูรณ์และถูกต้องของข้อมูล ป้องกันข้อมูลเสียหายหรือไม่สอดคล้องกัน</p>
+    </div></div>
+  </div>
+</div>
+
+<!-- 8 Design -->
+<div class="section" id="s-design">
+  <div class="section-num">8</div>
+  <h2>การออกแบบข้อมูล</h2>
+  <p class="sub">Dense vs Sparse Data และ Inconsistency</p>
+  <div class="card">
+    <p>ข้อผิดพลาดร้ายแรงของการออกแบบฐานข้อมูลคือการนำ Data Object ที่ต่างชนิดกันไปยัดรวมไว้ใน "ตารางเดียวกัน" ซึ่งจะทำให้เกิดปัญหา Sparse Data</p>
+  </div>
+
+  <div class="sql">
+    <div class="sql-head">ตัวอย่าง: Sparse Data vs Dense Data</div>
+    <div class="sql-body"><pre><span class="sc">-- ❌ Sparse Data: ยัดทุกอย่างในตารางเดียว</span>
+<span class="sc">--</span>
+<span class="sc">-- | ID | Name  | Skill     | Cert         |</span>
+<span class="sc">-- |----|-------|-----------|--------------|</span>
+<span class="sc">-- | 1  | Ake   | SQL       | NULL         |</span>
+<span class="sc">-- | 2  | B     | NULL      | AWS Cert     |</span>
+<span class="sc">-- | 3  | C     | Python    | NULL         |</span>
+<span class="sc">-- (ช่อง NULL เยอะ = เปลืองพื้นที่)</span>
+
+<span class="sc">-- ✅ Dense Data: แยก Object ออกมาเป็นหลายตาราง</span>
+<span class="sc">--</span>
+<span class="sc">-- Table: Employee</span>
+<span class="sc">-- | ID | Name |</span>
+<span class="sc">-- |----|------|</span>
+<span class="sc">-- | 1  | Ake  |</span>
+<span class="sc">--</span>
+<span class="sc">-- Table: Skill</span>
+<span class="sc">-- | Emp_ID | Skill |</span>
+<span class="sc">-- |--------|-------|</span>
+<span class="sc">-- | 1      | SQL   |</span></pre></div>
+  </div>
+
+  <div class="box box-blue">
+    <h4>เป้าหมายการออกแบบ</h4>
+    <p>วิเคราะห์และแยก Data Object ออกจากกัน ให้แต่ละตารางมีข้อมูลครบทุกคอลัมน์ (Dense Data) ช่วยประหยัดพื้นที่เซิร์ฟเวอร์และลดปัญหาความซ้ำซ้อน</p>
+  </div>
+</div>
+
+<!-- 9 Formats & XML -->
+<div class="section" id="s-formats">
+  <div class="section-num">9</div>
+  <h2>โครงสร้างข้อมูลและการใช้ XML</h2>
+  <p class="sub">Data Formats & XML</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">1. ประเภทของรูปแบบข้อมูล<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <div class="tabs">
+        <div class="tab-btns">
+          <button class="tab-btn active" onclick="switchTab(event,'tp-struct')">Structural</button>
+          <button class="tab-btn" onclick="switchTab(event,'tp-unstruct')">Unstructural</button>
+          <button class="tab-btn" onclick="switchTab(event,'tp-semi')">Semi-structural</button>
+        </div>
+        <div class="tab-pane active" id="tp-struct"><div class="card"><h3>Structural Data (ข้อมูลแบบมีโครงสร้าง)</h3><p>เช่น ข้อมูลในรูปแบบตาราง Table ของ DBMS หรือ Spreadsheet มีการกำหนดคอลัมน์และข้อจำกัดชัดเจน ไม่สามารถสุ่มใส่ข้อมูลประเภทต่างกันได้</p></div></div>
+        <div class="tab-pane" id="tp-unstruct"><div class="card"><h3>Unstructural Data (ข้อมูลแบบไม่มีโครงสร้าง)</h3><p>เช่น ข้อความ (Text Format) เป็นประโยคภาษาอังกฤษที่ต้องใช้โปรแกรมตัดคำอีกทีเพื่อหาข้อมูล ไม่มีรูปแบบตายตัว</p></div></div>
+        <div class="tab-pane" id="tp-semi"><div class="card"><h3>Semi-structural Data (ข้อมูลกึ่งโครงสร้าง)</h3><p>เช่น ภาษามาร์กอัป (Markup Language) อย่าง HTML หรือ XML (Extensible Markup Language) มีแท็กกำกับแต่ไม่เข้มงวดเท่า Structural</p></div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">2. การส่งข้อมูลข้ามระบบด้วย XML<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>เมื่อมีการเชื่อมโยงข้อมูลระหว่างสององค์กร เช่น มหาวิทยาลัยมหิดล (ICT) และธนาคารไทยพาณิชย์ (SCB) ทั้งสองแห่งอาจใช้ซอฟต์แวร์ DBMS ที่ต่างกันโดยสิ้นเชิง</p>
+      <div class="box box-red">
+        <h4>ปัญหา</h4>
+        <ul>
+          <li>มหาวิทยาลัยใช้ <strong>MS-SQL Server</strong> ส่วนธนาคารใช้ <strong>Oracle</strong></li>
+          <li>โครงสร้างไฟล์ไม่ตรงกัน: ฝั่งมหาวิทยาลัยใช้ <strong>student.dat</strong> ส่วนธนาคารใช้ <strong>customer.dat</strong></li>
+          <li>รูปแบบคำสั่ง Syntax ไม่เหมือนกัน</li>
+        </ul>
+      </div>
+      <div class="box box-cyan">
+        <h4>ทางแก้: ใช้ XML เป็นภาษากลาง (Standard Format)</h4>
+        <p>สององค์กรตกลงรูปแบบมาตรฐานร่วมกันโดยใช้ XML (Semi-structural format) เพื่อเป็น "ภาษากลาง" ในการแลกเปลี่ยนข้อมูล</p>
+      </div>
+      <div class="sql">
+        <div class="sql-head">ตัวอย่าง XML ที่ส่งข้ามระบบ</div>
+        <div class="sql-body"><pre><span class="sk">&lt;Student&gt;</span>
+  <span class="sk">&lt;id&gt;</span><span class="ss">101</span><span class="sk">&lt;/id&gt;</span>
+  <span class="sk">&lt;name&gt;</span><span class="ss">Ake</span><span class="sk">&lt;/name&gt;</span>
+  <span class="sk">&lt;faculty&gt;</span><span class="ss">ICT</span><span class="sk">&lt;/faculty&gt;</span>
+  <span class="sk">&lt;tuition_fee&gt;</span><span class="ss">15000</span><span class="sk">&lt;/tuition_fee&gt;</span>
+<span class="sk">&lt;/Student&gt;</span></pre></div>
+      </div>
+      <div class="box box-amber">
+        <h4>XML vs HTML</h4>
+        <ul>
+          <li><strong>HTML:</strong> มีแท็กมาตรฐานถูกกำหนดโดยหน่วยงาน W3C ใช้แสดงผลผ่าน Browser</li>
+          <li><strong>XML:</strong> เป็นแท็กที่ 2 องค์กรสามารถกำหนดข้อตกลง (Structure) ร่วมกันเองได้ เพื่อส่งข้อมูลเฉพาะกิจ</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- 10 Examples -->
+<div class="section" id="s-examples">
+  <div class="section-num">10</div>
+  <h2>ตัวอย่างประกอบ</h2>
+  <p class="sub">เรื่องราวที่ช่วยให้เข้าใจ</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่าง 1: Data Object -> Schema -> Instance<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>สมมติเราต้องการออกแบบฐานข้อมูลนักศึกษา:</p>
+      <ul class="cl">
+        <li><strong>Data Object</strong> = Student (นักศึกษา) - สิ่งที่เราจะเก็บข้อมูล</li>
+        <li><strong>Schema</strong> = ID, Name - โครงสร้างที่กำหนดไว้</li>
+        <li><strong>Instance</strong> = 101, Ake - ข้อมูลจริงที่เกิดขึ้น</li>
+      </ul>
+      <div class="flow">
+        <div class="flow-item">Data Object<br><small>Student (นักศึกษา)</small></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">Schema<br><small>ID, Name</small></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">Instance<br><small>101, Ake</small></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่าง 2: Business Logic ที่แตกต่างกัน<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <div class="flow">
+        <div class="flow-item">มหาวิทยาลัยมหิดล<br><small>GPA &gt; 2 → ลงทะเบียนได้ 5 วิชา</small></div>
+        <span class="flow-arrow">vs</span>
+        <div class="flow-item">มหาวิทยาลัยอื่น<br><small>GPA &gt; 2.5 → ลงทะเบียนได้ 8 วิชา</small></div>
+      </div>
+      <p>นี่คือ <strong>Business Logic</strong> ที่แตกต่างกันไปในแต่ละองค์กร แม้จะเป็นกิจกรรมเดียวกัน (ลงทะเบียนเรียน) แต่กฎเกณฑ์ไม่เหมือนกัน</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่าง 3: Data Transformation<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>การเขียนสคริปต์ SQL หลังบ้านเพื่อแปลงวันเกิดที่บันทึกเป็นแบบคริสต์ศักราช ให้กลายเป็นตัวอักษร "1 มกราคม 2534" เพื่อนำไปแสดงที่ Application ปลายทาง</p>
+      <div class="sql">
+        <div class="sql-head">SQL Data Transformation</div>
+        <div class="sql-body"><pre><span class="sc">-- เก็บเป็น 1991-01-01 (คริสตศักราช)</span>
+<span class="sc">-- แสดงผลเป็น "1 มกราคม 2534" (พุทธศักราช)</span>
+
+<span class="sk">SELECT</span> name,
+       <span class="sk">CONCAT</span>(
+         <span class="sk">DAY</span>(birthdate), <span class="ss">' '</span>,
+         <span class="sk">MONTHNAME</span>(birthdate), <span class="ss">' '</span>,
+         <span class="sk">YEAR</span>(birthdate) + <span class="ss">543</span>
+       ) <span class="sk">AS</span> display_date
+<span class="sk">FROM</span> student;</pre></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่าง 4: XML ส่งข้ามธนาคาร<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p>ฝั่งมหาวิทยาลัยต้องการส่งข้อมูลให้นักศึกษาไปจ่ายค่าเทอมที่ธนาคาร จึงใช้รูปแบบ XML เขียนส่งไป:</p>
+      <div class="sql">
+        <div class="sql-head">XML: ส่งข้อมูลนักศึกษาไปธนาคาร</div>
+        <div class="sql-body"><pre><span class="sk">&lt;StudentPayment&gt;</span>
+  <span class="sk">&lt;Student&gt;</span>
+    <span class="sk">&lt;id&gt;</span><span class="ss">101</span><span class="sk">&lt;/id&gt;</span>
+    <span class="sk">&lt;name&gt;</span><span class="ss">Ake</span><span class="sk">&lt;/name&gt;</span>
+    <span class="sk">&lt;faculty&gt;</span><span class="ss">ICT</span><span class="sk">&lt;/faculty&gt;</span>
+    <span class="sk">&lt;amount&gt;</span><span class="ss">15000</span><span class="sk">&lt;/amount&gt;</span>
+  <span class="sk">&lt;/Student&gt;</span>
+<span class="sk">&lt;/StudentPayment&gt;</span></pre></div>
+      </div>
+      <p>ธนาคารสามารถนำไฟล์ .xml ไปแยกข้อมูลอ่านและอัปเดตลงระบบ Oracle ของธนาคารได้เอง โดยไม่ต้องกังวลว่ามหาวิทยาลัยจะใช้ DBMS ค่ายใด</p>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">แบบฝึกหัดพร้อมเฉลย<span class="arr">▼</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <div class="card">
+        <h3>ข้อ 1: องค์ประกอบ 5 ประการ</h3>
+        <p>องค์ประกอบทั้ง 5 ส่วนของระบบฐานข้อมูลมีอะไรบ้าง?</p>
+        <div class="box box-blue" style="margin-top:0.75rem;">
+          <h4>เฉลย</h4>
+          <p><strong>Hardware, Software, People, Procedure, Data & Business Logic</strong></p>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ข้อ 2: Sparse vs Dense Data</h3>
+        <p>หากให้ตารางมาแล้วช่องว่าง (Null) เยอะเกินไป เรียกว่าข้อมูลแบบใด? แก้ไขอย่างไร?</p>
+        <div class="box box-blue" style="margin-top:0.75rem;">
+          <h4>เฉลย</h4>
+          <p><strong>Sparse Data</strong> แก้ไขโดยแตก Data Object ให้กลายเป็นหลายตารางแยกกัน เพื่อให้ได้ Dense Data</p>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ข้อ 3: XML vs HTML</h3>
+        <p>ทำไมองค์กรสองแห่งที่ใช้ DBMS ต่างชนิดกันจึงต้องใช้ XML?</p>
+        <div class="box box-blue" style="margin-top:0.75rem;">
+          <h4>เฉลย</h4>
+          <p>เพราะระบบทั้งสองมีมาตรฐานคำสั่ง โครงสร้าง และประเภทฐานข้อมูลที่ไม่เหมือนกัน การใช้ XML ซึ่งเป็น Semi-structural format ทำให้ทั้งสององค์กรตั้งแท็กที่เป็นข้อตกลงมาตรฐานส่วนกลางขึ้นมาแลกเปลี่ยนข้อมูลกันได้</p>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- 11 ER Diagram -->
+<div class="section" id="s-er">
+  <div class="section-num">11</div>
+  <h2>Visual ER Diagram</h2>
+  <p class="sub">Entity Relationship Visualization</p>
+  <div class="card"><h3>ตัวอย่าง: แยก Data Object ออกเป็นตาราง</h3><p>การออกแบบที่ดีคือการแยก Object ต่างประเภทกันออกเป็นตารางต่างหาก</p></div>
+  <div class="er">
+    <div class="entity">
+      <div class="entity-head">พนักงาน (Employee)</div>
+      <div class="entity-field"><span class="pk">PK</span> Emp_ID</div>
+      <div class="entity-field">First_Name</div>
+      <div class="entity-field">Last_Name</div>
+      <div class="entity-field">Position</div>
+      <div class="entity-field">Salary</div>
+    </div>
+    <div class="er-link">⟷</div>
+    <div class="entity purple">
+      <div class="entity-head">ทักษะ (Skill)</div>
+      <div class="entity-field"><span class="pk">PK</span> Skill_ID</div>
+      <div class="entity-field"><span class="fk">FK</span> Emp_ID</div>
+      <div class="entity-field">Skill_Name</div>
+      <div class="entity-field">Level</div>
+    </div>
+  </div>
+  <div class="er" style="margin-top:0;">
+    <div class="entity cyan">
+      <div class="entity-head">ประกาศนียบัตร (Certificate)</div>
+      <div class="entity-field"><span class="pk">PK</span> Cert_ID</div>
+      <div class="entity-field"><span class="fk">FK</span> Emp_ID</div>
+      <div class="entity-field">Cert_Name</div>
+      <div class="entity-field">Issue_Date</div>
+    </div>
+    <div class="er-link">⟷</div>
+    <div class="entity amber">
+      <div class="entity-head">แผนก (Department)</div>
+      <div class="entity-field"><span class="pk">PK</span> Dept_ID</div>
+      <div class="entity-field"><span class="fk">FK</span> Emp_ID</div>
+      <div class="entity-field">Dept_Name</div>
+      <div class="entity-field">Location</div>
+    </div>
+  </div>
+  <div class="sql" style="margin-top:0.75rem;">
+    <div class="sql-head">SQL Query ตัวอย่าง</div>
+    <div class="sql-body"><pre><span class="sk">CREATE TABLE</span> Employee (
+    Emp_ID     <span class="sk">INT PRIMARY KEY</span>,
+    First_Name <span class="sk">VARCHAR</span>(50),
+    Last_Name  <span class="sk">VARCHAR</span>(50),
+    Position   <span class="sk">VARCHAR</span>(100),
+    Salary     <span class="sk">DECIMAL</span>(10,2)
+);
+
+<span class="sk">CREATE TABLE</span> Skill (
+    Skill_ID   <span class="sk">INT PRIMARY KEY</span>,
+    Emp_ID     <span class="sk">INT REFERENCES</span> Employee(Emp_ID),
+    Skill_Name <span class="sk">VARCHAR</span>(100),
+    Level      <span class="sk">VARCHAR</span>(20)
+);
+
+<span class="sk">CREATE TABLE</span> Certificate (
+    Cert_ID    <span class="sk">INT PRIMARY KEY</span>,
+    Emp_ID     <span class="sk">INT REFERENCES</span> Employee(Emp_ID),
+    Cert_Name  <span class="sk">VARCHAR</span>(100),
+    Issue_Date <span class="sk">DATE</span>
+);</pre></div>
+  </div>
+</div>
+
+<!-- 12 Flashcards -->
+<div class="section" id="s-flash">
+  <div class="section-num">12</div>
+  <h2>Flashcards</h2>
+  <p class="sub">คลิกเพื่อพลิกการ์ด - ทบทวนคำศัพท์</p>
+  <div class="fc-grid">
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Data Object</h4><p>วัตถุข้อมูลคืออะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Data Object (Entity)</h4><p>สิ่งที่เราสนใจจัดเก็บข้อมูล เช่น นักศึกษา, พนักงาน, สินค้า เป็นข้อเท็จจริงดิบ (Raw Fact)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Schema</h4><p>Schema คืออะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Schema (โครงสร้าง)</h4><p>โครงสร้างของข้อมูล เทียบเท่า Attribute เช่น ID, Name, Gender - เป็นกรอบที่กำหนดไว้ล่วงหน้า</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>DBMS</h4><p>DBMS คืออะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Database Management System</h4><p>ซอฟต์แวร์ที่ติดตั้งบนเซิร์ฟเวอร์ เป็นตัวกลางในการเชื่อมต่อ บริหารจัดการ และดูแลความปลอดภัยให้ข้อมูล เช่น MySQL, Oracle</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Sparse Data</h4><p>ข้อมูลเบาบางคือ?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Sparse Data</h4><p>ตารางที่มีช่องว่างเยอะ เปลืองพื้นที่เซิร์ฟเวอร์ เกิดจากยัด Data Object หลายเรื่องในตารางเดียว แก้ไขโดยแยกตาราง</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Business Logic</h4><p>กฎธุรกิจคืออะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Business Logic</h4><p>กฎเกณฑ์หรือเงื่อนไขทางธุรกิจที่แตกต่างกันไปในแต่ละองค์กร เช่น กฎการลงทะเบียนเรียนของแต่ละมหาวิทยาลัย</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Data Dictionary</h4><p>พจนานุกรมข้อมูลคือ?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Data Dictionary</h4><p>รวบรวมคำศัพท์และความหมายของฐานข้อมูล ป้องกันความสับสนเรื่องคำศัพท์ เหมือน Diary ของข้อมูล</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>XML</h4><p>XML ใช้ทำอะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Extensible Markup Language</h4><p>Semi-structural data ใช้เป็นภาษากลางเชื่อม 2 องค์กรที่ใช้ DBMS ต่างกัน แท็กกำหนดร่วมกันเองได้ (ต่างจาก HTML)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Data Transformation</h4><p>การแปลงข้อมูลคือ?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Data Transformation</h4><p>แปลงรูปแบบข้อมูลจากที่จัดเก็บจริงให้แสดงผลในรูปแบบที่ผู้ใช้ต้องการ เช่น แปลงคริสต์ศักราชเป็นพุทธศักราช ผ่าน SQL</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Island of Information</h4><p>เกาะข้อมูลคือ?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Island of Information</h4><p>ปัญหาข้อมูลแยกกันอยู่ แต่ละแผนกเก็บ Excel แยกกัน ทำให้ไม่เชื่อมโยง แก้ไขโดยใช้ Database รวมศูนย์</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Data Inconsistency</h4><p>ข้อมูลไม่สอดคล้องคือ?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Data Inconsistency</h4><p>ปัญหาข้อมูลไม่ตรงกัน เช่น พิมพ์ Peter เป็น Pter หรือใช้ DB กับ Database สลับกัน ป้องกันด้วย Data Dictionary</p></div></div></div>
+  </div>
+</div>
+
+<!-- 13 Quiz -->
+<div class="section" id="s-quiz">
+  <div class="section-num">13</div>
+  <h2>Quiz ทดสอบความรู้</h2>
+  <p class="sub">Multiple Choice - ตรวจคำตอบทันที</p>
+  <div id="quizWrap">
+    <div class="quiz-q" data-idx="0" data-correct="1">
+      <h4>ข้อ 1</h4>
+      <p class="qtext">องค์ประกอบทั้ง 5 ส่วนของระบบฐานข้อมูลมีอะไรบ้าง?</p>
+      <div class="quiz-opts">
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">A</span><span>Hardware, Software, Network, People, Data</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">B</span><span>Hardware, Software, People, Procedure, Data & Business Logic</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">C</span><span>Hardware, DBMS, User, Application, Data</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">D</span><span>Server, MySQL, DBA, Query, Table</span></div>
+      </div>
+      <div class="quiz-exp"><strong>เฉลย: B</strong><br>องค์ประกอบ 5 อย่าง ได้แก่ Hardware, Software, People, Procedure, และ Data & Business Logic</div>
+    </div>
+    <div class="quiz-q" data-idx="1" data-correct="2">
+      <h4>ข้อ 2</h4>
+      <p class="qtext">Sparse Data ควรแก้ไขอย่างไร?</p>
+      <div class="quiz-opts">
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">A</span><span>เพิ่มพื้นที่ฮาร์ดดิสก์</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">B</span><span>ลบข้อมูลที่ไม่จำเป็นออก</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">C</span><span>แยก Data Object ให้เป็นหลายตารางแยกกัน</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">D</span><span>เปลี่ยนจาก DBMS เป็น Excel</span></div>
+      </div>
+      <div class="quiz-exp"><strong>เฉลย: C</strong><br>แก้ Sparse Data โดยการแยก Data Object ต่าง类型กันออกเป็นตารางต่างๆ เพื่อให้ได้ Dense Data ที่มีข้อมูลครบทุกช่อง</div>
+    </div>
+    <div class="quiz-q" data-idx="2" data-correct="0">
+      <h4>ข้อ 3</h4>
+      <p class="qtext">องค์กร A ใช้ SQL Server องค์กร B ใช้ Oracle จะแลกเปลี่ยนข้อมูลกันอย่างไร?</p>
+      <div class="quiz-opts">
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">A</span><span>กำหนด Standard Format ร่วมกันโดยใช้ XML เป็นตัวกลาง</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">B</span><span>ส่งไฟล์ Excel ให้กัน</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">C</span><span>เปลี่ยนให้ใช้ DBMS ตัวเดียวกัน</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">D</span><span>ส่งข้อมูลผ่าน HTTP Request โดยตรง</span></div>
+      </div>
+      <div class="quiz-exp"><strong>เฉลย: A</strong><br>สององค์กรต้องตกลงรูปแบบมาตรฐานร่วมกันโดยใช้ XML (Semi-structural format) เป็นภาษากลางในการแลกเปลี่ยนข้อมูล</div>
+    </div>
+    <div class="quiz-q" data-idx="3" data-correct="1">
+      <h4>ข้อ 4</h4>
+      <p class="qtext">อาชีพใดในสายงานฐานข้อมูลที่มีรายได้สูงสุด?</p>
+      <div class="quiz-opts">
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">A</span><span>Database Developer</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">B</span><span>Database Administrator (DBA)</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">C</span><span>Database Designer</span></div>
+        <div class="quiz-opt" onclick="pickOpt(this)"><span class="opt-mark">D</span><span>Data Scientist</span></div>
+      </div>
+      <div class="quiz-exp"><strong>เฉลย: B - DBA</strong><br>Database Administrator (DBA) ได้รับค่าตอบแทนสูงสุด เพราะทำหน้าที่ดูแลเซิร์ฟเวอร์ ติดตั้งระบบ จัดการภาพรวมทั้งหมด ดูแลความปลอดภัย</div>
+    </div>
+    <button class="quiz-submit" id="quizBtn" onclick="submitQuiz()">ตรวจคำตอบ</button>
+  </div>
+  <div class="quiz-score" id="quizScore">
+    <div class="sv" id="scoreVal">0/4</div>
+    <p style="color:var(--text2);margin-top:0.4rem;">คะแนนของคุณ</p>
+    <button class="btn btn-primary" style="margin-top:0.75rem;" onclick="resetQuiz()">ลองใหม่</button>
+  </div>
+</div>
+
+<!-- 14 Cheat Sheet -->
+<div class="section" id="s-cheat">
+  <div class="section-num">14</div>
+  <h2>Cheat Sheet</h2>
+  <p class="sub">สรุปก่อนสอบ</p>
+  <div class="cheat">
+    <h3>Quick Reference - DBMS Chapter 1.2</h3>
+    <div class="cheat-grid">
+      <div class="cheat-item"><h4>Data Evolution</h4><p>Object → Data (มี Schema+Instance) → Database → DBMS (ซอฟต์แวร์)</p></div>
+      <div class="cheat-item"><h4>Database ≠ DBMS</h4><p>Database = ตัวข้อมูลที่จัดเก็บ | DBMS = ซอฟต์แวร์จัดการ (MySQL, Oracle)</p></div>
+      <div class="cheat-item"><h4>องค์ประกอบ 5 ประการ</h4><p>1. Hardware 2. Software 3. People 4. Procedure 5. Data/Business Logic</p></div>
+      <div class="cheat-item"><h4>Roles & Salary</h4><p>DBA (~50K) > Designer (~30K) > Developer (~20K)</p></div>
+      <div class="cheat-item"><h4>Island of Information</h4><p>ข้อมูลแยกกัน → แก้ไขโดยใช้ Database รวมศูนย์</p></div>
+      <div class="cheat-item"><h4>Sparse → Dense</h4><p>แยก Object ต่าง类型กันเป็นหลายตาราง → ข้อมูลหนาแน่น ประหยัดพื้นที่</p></div>
+      <div class="cheat-item"><h4>Data Inconsistency</h4><p>ข้อมูลไม่สอดคล้องกัน → แก้ไขด้วย Data Dictionary บังคับใช้ Schema</p></div>
+      <div class="cheat-item"><h4>Data Transformation</h4><p>แปลงข้อมูลผ่าน SQL เช่น คริสต์ศักราช → พุทธศักราช</p></div>
+      <div class="cheat-item"><h4>XML = ภาษากลาง</h4><p>Semi-structural data ใช้เชื่อม 2 องค์กรที่ใช้ DBMS ต่างกัน แท็กกำหนดร่วมกันเองได้</p></div>
+      <div class="cheat-item"><h4>XML ≠ HTML</h4><p>HTML: แท็ก由 W3C กำหนด | XML: แท็กองค์กรกำหนดเอง เพื่อส่งข้อมูลข้ามระบบ</p></div>
+    </div>
+  </div>
+  <div class="sql">
+    <div class="sql-head">SQL Basics Cheat Sheet</div>
+    <div class="sql-body"><pre><span class="sc">-- สร้างตาราง</span>
+<span class="sk">CREATE TABLE</span> table_name (
+    id <span class="sk">INT PRIMARY KEY</span>,
+    name <span class="sk">VARCHAR</span>(100)
+);
+
+<span class="sc">-- เพิ่มข้อมูล</span>
+<span class="sk">INSERT INTO</span> table_name (id, name) <span class="sk">VALUES</span> (1, <span class="ss">'John'</span>);
+
+<span class="sc">-- ดึงข้อมูล</span>
+<span class="sk">SELECT</span> * <span class="sk">FROM</span> table_name;
+
+<span class="sc">-- แก้ไขข้อมูล</span>
+<span class="sk">UPDATE</span> table_name <span class="sk">SET</span> name = <span class="ss">'Jane'</span> <span class="sk">WHERE</span> id = 1;
+
+<span class="sc">-- ลบข้อมูล</span>
+<span class="sk">DELETE FROM</span> table_name <span class="sk">WHERE</span> id = 1;</pre></div>
+  </div>
+</div>
+
+<!-- 15 Exam Notes -->
+<div class="section" id="s-exam">
+  <div class="section-num">15</div>
+  <h2>Exam Notes</h2>
+  <p class="sub">เคล็ดลับการเก็งข้อสอบ</p>
+  <div class="box box-pink">
+    <h4>1. Database vs DBMS</h4>
+    <p>จุดที่มักออกสอบ: ความแตกต่างระหว่าง Database กับ DBMS Database = แหล่งเก็บข้อมูลทางกายภาพ | DBMS = ซอฟต์แวร์จัดการ</p>
+  </div>
+  <div class="box box-pink">
+    <h4>2. Sparse Data</h4>
+    <p>สถานการณ์ประยุกต์: หากให้ตารางมาแล้วช่องว่าง (Null) เยอะเกินไป เรียกว่า Sparse Data แก้ไขโดยแตก Data Object ให้กลายเป็นหลายตารางแยกกัน</p>
+  </div>
+  <div class="box box-pink">
+    <h4>3. XML สำหรับเชื่อมต่อข้ามองค์กร</h4>
+    <p>การเชื่อมต่อข้ามองค์กร: หากองค์กร A ใช้ SQL Server องค์กร B ใช้ Oracle จะแลกเปลี่ยนข้อมูลโดยใช้ XML เป็นตัวกลาง Standard Format</p>
+  </div>
+  <div class="box box-pink">
+    <h4>4. Data Transformation ด้วย SQL</h4>
+    <p>แม้จะเป็นการแสดงผลหน้าเว็บไซต์ แต่ทำไมเราไม่ใช้ C หรือ Python แปลงข้อมูล? เพราะสามารถให้ฝั่งหลังบ้าน Database จัดการได้เลยผ่านคำสั่ง SQL</p>
+  </div>
+  <div class="box box-amber">
+    <h4>สรุปสิ่งที่ต้องจำ (Exam Focus!)</h4>
+    <ul class="cl">
+      <li><strong>องค์ประกอบ 5 อย่าง:</strong> Hardware, Software, People, Procedure, Data/Business Logic</li>
+      <li><strong>เงินเดือน:</strong> DBA สูงกว่า Designer สูงกว่า Developer</li>
+      <li><strong>DBMS Functions:</strong> Data Dictionary, Transformation, Access Control, Security, Backup & Recovery</li>
+      <li><strong>Dense Data:</strong> มุ่งเป้าไปที่ความหนาแน่น ลด Sparse Data โดยแยกตารางตาม Data Object</li>
+      <li><strong>XML:</strong> Semi-structural ใช้เป็นตัวกลางเชื่อมต่อและส่งต่อข้อมูลระหว่างองค์กรที่ใช้ DBMS ต่างกัน</li>
+    </ul>
+  </div>
+  <div class="box box-red">
+    <h4>ข้อควรระวัง - นักศึกษามักสับสน</h4>
+    <ul>
+      <li><strong>อย่านำ Data Object หลายเรื่องมารวมในตารางเดียว:</strong> จะเกิด Sparse Data เปลืองพื้นที่เซิร์ฟเวอร์</li>
+      <li><strong>อย่าสับสน Database กับ DBMS:</strong> Database = ข้อมูล | DBMS = ซอฟต์แวร์จัดการ</li>
+      <li><strong>XML ไม่ใช่ HTML:</strong> HTML แสดงผลผ่าน Browser แท็ก由 W3C กำหนด | XML ส่งข้อมูลข้ามระบบ แท็กกำหนดเองได้</li>
+    </ul>
+  </div>
+</div>
+
+</main>
+
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer class="footer">
+  <p>DBMS 1.2 - Introduction to Database Systems and Architecture</p>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const sidebar = $('#sidebar'), overlay = $('#overlay');
+$('#menuBtn').onclick = () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); };
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+$$('.sidebar-nav a').forEach(a => a.addEventListener('click', () => { if(innerWidth<=768){sidebar.classList.remove('open');overlay.classList.remove('show');} }));
+
+const secs = $$('.section'), navAs = $$('.sidebar-nav a');
+const onScroll = () => {
+  let cur = '';
+  secs.forEach(s => { if(scrollY >= s.offsetTop - 80) cur = s.id; });
+  navAs.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+  const h = document.documentElement.scrollHeight - innerHeight;
+  $('#progress').style.width = (scrollY / h * 100) + '%';
+  $('#btt').classList.toggle('show', scrollY > 400);
+};
+addEventListener('scroll', onScroll);
+
+function toggleColl(h) { h.parentElement.classList.toggle('open'); }
+
+function switchTab(e, id) {
+  const c = e.target.closest('.tabs');
+  c.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  c.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+const sData = [
+  {t:'Data Evolution',c:'Data Object Data Database DBMS วิวัฒนาการของข้อมูล Raw Fact Schema Instance',s:'s-keyconcepts'},
+  {t:'Database vs DBMS',c:'ความแตกต่าง ฐานข้อมูล ซอฟต์แวร์จัดการ MySQL Oracle MS-SQL',s:'s-keyconcepts'},
+  {t:'Island of Information',c:'เกาะข้อมูล ข้อมูลแยกกัน แก้ไขโดย Database รวมศูนย์',s:'s-keyconcepts'},
+  {t:'Sparse vs Dense Data',c:'ข้อมูลเบาบาง ข้อมูลหนาแน่น แยกตาราง Null เปลืองพื้นที่',s:'s-keyconcepts'},
+  {t:'Data Inconsistency',c:'ข้อมูลไม่สอดคล้อง สะกดชื่อต่างกัน Data Dictionary',s:'s-keyconcepts'},
+  {t:'สายอาชีพ',c:'DBA Database Administrator Designer Developer เงินเดือน รายได้',s:'s-careers'},
+  {t:'องค์ประกอบ 5 ประการ',c:'Hardware Software People Procedure Data Business Logic',s:'s-components'},
+  {t:'DBMS Functions',c:'Data Dictionary Transformation Security Multiuser Backup Recovery Integrity',s:'s-functions'},
+  {t:'Data Transformation',c:'แปลงข้อมูล SQL คริสต์ศักราช พุทธศักราช',s:'s-functions'},
+  {t:'XML',c:'Extensible Markup Language Semi-structural ส่งข้อมูลข้ามระบบ ภาษากลาง',s:'s-formats'},
+  {t:'Data Formats',c:'Structural Unstructural Semi-structural รูปแบบข้อมูล',s:'s-formats'},
+  {t:'ER Diagram',c:'Entity Relationship Employee Skill Certificate Department PK FK',s:'s-er'},
+  {t:'คำศัพท์',c:'Data Object Schema Instance Meta Data Business Logic API XML',s:'s-terms'},
+  {t:'Exam Tips',c:'เคล็ดลับ ข้อสอบ Database vs DBMS Sparse Data XML Data Transformation',s:'s-exam'},
+  {t:'Cheat Sheet',c:'สรุปก่อนสอบ Quick Reference องค์ประกอบ DBMS Roles Salary',s:'s-cheat'},
+  {t:'SQL Basics',c:'CREATE TABLE INSERT SELECT UPDATE DELETE SQL Query',s:'s-cheat'},
+];
+const sIn = $('#searchIn'), sDrop = $('#searchDrop');
+sIn.addEventListener('input', e => {
+  const q = e.target.value.toLowerCase().trim();
+  if(q.length < 2){ sDrop.classList.remove('show'); return; }
+  const r = sData.filter(i => i.t.toLowerCase().includes(q) || i.c.toLowerCase().includes(q));
+  if(r.length){
+    sDrop.innerHTML = r.map(i=>`<div class="search-item" onclick="goSec('${i.s}')"><h4>${i.t}</h4><p>${i.c.substring(0,70)}...</p></div>`).join('');
+    sDrop.classList.add('show');
+  } else {
+    sDrop.innerHTML = '<div class="search-item"><p>ไม่พบผลลัพธ์</p></div>';
+    sDrop.classList.add('show');
+  }
+});
+function goSec(id){ sDrop.classList.remove('show'); sIn.value=''; document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+document.addEventListener('click', e => { if(!e.target.closest('.search-wrap')) sDrop.classList.remove('show'); });
+
+const answers = {};
+let submitted = false;
+function pickOpt(el){
+  if(submitted) return;
+  const q = el.closest('.quiz-q');
+  q.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[q.dataset.idx] = Array.from(q.querySelectorAll('.quiz-opt')).indexOf(el);
+}
+function submitQuiz(){
+  if(submitted) return;
+  const qs = $$('.quiz-q');
+  let score=0, ans=0;
+  qs.forEach(q=>{
+    const ci = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    if(answers[q.dataset.idx] !== undefined){
+      ans++;
+      opts.forEach((o,j)=>{ o.style.pointerEvents='none'; if(j===ci) o.classList.add('correct'); else if(j===answers[q.dataset.idx] && j!==ci) o.classList.add('wrong'); });
+      if(answers[q.dataset.idx]===ci) score++;
+      q.querySelector('.quiz-exp').classList.add('show');
+    }
+  });
+  if(ans < qs.length){ alert('กรุณาตอบคำถามให้ครบทุกข้อ'); return; }
+  submitted = true;
+  $('#quizBtn').style.display='none';
+  const sc = $('#quizScore'); sc.classList.add('show');
+  $('#scoreVal').textContent = (score===qs.length?'🎉 ':'') + score + '/' + qs.length;
+}
+function resetQuiz(){
+  submitted = false;
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  $$('.quiz-opt').forEach(o=>{ o.classList.remove('selected','correct','wrong'); o.style.pointerEvents=''; });
+  $$('.quiz-exp').forEach(e=>e.classList.remove('show'));
+  $('#quizScore').classList.remove('show');
+  $('#quizBtn').style.display='';
+}
+</script>
+</body>
+</html>

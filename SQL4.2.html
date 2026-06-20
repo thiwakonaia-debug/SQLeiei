@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ER & EER Modeling - Interactive Learning</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --bg2: #161822;
+  --bg3: #1e2030;
+  --card: #1a1d2e;
+  --border: rgba(255,255,255,0.06);
+  --text: #e2e4ed;
+  --text2: #9ba0b8;
+  --muted: #5c6078;
+  --blue: #6c72cb;
+  --purple: #9b6dff;
+  --cyan: #38bdf8;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --sidebar-w: 260px;
+}
+
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--blue) var(--bg2); }
+body { font-family: 'Inter','Noto Sans Thai',sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg,var(--blue),var(--purple)); z-index: 9999; transition: width 0.1s; }
+
+.sidebar { position: fixed; top: 0; left: -280px; width: var(--sidebar-w); height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); z-index: 1000; transition: left 0.25s; overflow-y: auto; padding: 1.25rem 0; }
+.sidebar.open { left: 0; }
+.sidebar-head { padding: 0 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-head h3 { font-size: 0.95rem; font-weight: 700; }
+.sidebar-head p { font-size: 0.75rem; color: var(--muted); }
+.sidebar-nav a { display: block; padding: 9px 1.25rem; color: var(--text2); text-decoration: none; font-size: 0.85rem; border-left: 3px solid transparent; transition: 0.15s; }
+.sidebar-nav a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.sidebar-nav a.active { color: var(--blue); border-left-color: var(--blue); background: rgba(108,114,203,0.08); }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+.overlay.show { display: block; }
+
+.topbar { position: fixed; top: 0; left: 0; right: 0; height: 52px; background: rgba(15,17,23,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 998; display: flex; align-items: center; padding: 0 1rem; gap: 0.75rem; }
+.menu-btn { background: none; border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.menu-btn:hover { background: var(--bg3); }
+.search-wrap { flex: 1; max-width: 320px; margin-left: auto; }
+.search-wrap input { width: 100%; padding: 7px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; outline: none; font-family: inherit; }
+.search-wrap input::placeholder { color: var(--muted); }
+.search-wrap input:focus { border-color: var(--blue); }
+.search-dropdown { position: absolute; top: 48px; right: 1rem; width: 320px; max-height: 350px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; display: none; }
+.search-dropdown.show { display: block; }
+.search-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.search-item:last-child { border-bottom: none; }
+.search-item:hover { background: rgba(255,255,255,0.03); }
+.search-item h4 { font-size: 0.85rem; font-weight: 600; }
+.search-item p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+.main { padding: 72px 1.5rem 3rem; max-width: 860px; margin: 0 auto; }
+
+.hero { text-align: center; padding: 3rem 0 2rem; }
+.hero-badge { display: inline-block; padding: 5px 14px; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); border-radius: 20px; font-size: 0.8rem; color: var(--cyan); margin-bottom: 1.25rem; }
+.hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+.hero p { color: var(--text2); max-width: 560px; margin: 0 auto 1.5rem; font-size: 0.95rem; }
+.hero-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: 0.2s; }
+.btn-primary { background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost { background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { background: rgba(255,255,255,0.06); }
+.hero-stats { display: flex; justify-content: center; gap: 2.5rem; }
+.hero-stats .num { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
+.hero-stats .label { font-size: 0.8rem; color: var(--muted); }
+
+.section { margin-bottom: 3rem; }
+.section-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+.section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+.section .sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+.card p { color: var(--text2); line-height: 1.8; }
+.card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; }
+
+.box { border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+.box h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+.box p, .box ul { color: var(--text2); }
+.box ul { padding-left: 1.25rem; }
+.box li { margin-bottom: 0.4rem; }
+.box-blue { background: rgba(108,114,203,0.1); border: 1px solid rgba(108,114,203,0.2); }
+.box-blue h4 { color: var(--blue); }
+.box-cyan { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.15); }
+.box-cyan h4 { color: var(--cyan); }
+.box-amber { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15); }
+.box-amber h4 { color: var(--amber); }
+.box-red { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.15); }
+.box-red h4 { color: var(--red); }
+.box-pink { background: rgba(244,114,182,0.08); border: 1px solid rgba(244,114,182,0.15); }
+.box-pink h4 { color: var(--pink); }
+.box-purple { background: rgba(155,109,255,0.08); border: 1px solid rgba(155,109,255,0.15); }
+.box-purple h4 { color: var(--purple); }
+
+.coll { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.5rem; overflow: hidden; }
+.coll-head { padding: 0.85rem 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 0.9rem; user-select: none; }
+.coll-head:hover { background: rgba(255,255,255,0.02); }
+.coll-head .arr { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+.coll.open .coll-head .arr { transform: rotate(180deg); }
+.coll-body { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+.coll.open .coll-body { max-height: 8000px; }
+.coll-inner { padding: 0 1.25rem 1.25rem; color: var(--text2); }
+.coll-inner p { margin-bottom: 0.6rem; }
+.coll-inner ul { padding-left: 1.25rem; }
+.coll-inner li { margin-bottom: 0.4rem; }
+
+table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.85rem; }
+thead { background: linear-gradient(135deg,var(--blue),var(--purple)); }
+th { padding: 10px 14px; text-align: left; font-weight: 600; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text2); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.tabs { margin: 1rem 0; }
+.tab-btns { display: flex; gap: 3px; background: var(--bg3); border-radius: 8px; padding: 3px; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.tab-btn { padding: 7px 14px; border-radius: 6px; border: none; background: none; color: var(--text2); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.tab-btn.active { background: var(--blue); color: #fff; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+.flow { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin: 1.5rem 0; padding: 1.25rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; }
+.flow-item { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; text-align: center; }
+.flow-item:nth-child(1) { background: rgba(108,114,203,0.15); color: var(--blue); }
+.flow-item:nth-child(3) { background: rgba(56,189,248,0.15); color: var(--cyan); }
+.flow-item:nth-child(5) { background: rgba(155,109,255,0.15); color: var(--purple); }
+.flow-item:nth-child(7) { background: rgba(244,114,182,0.15); color: var(--pink); }
+.flow-arrow { color: var(--muted); }
+
+.er { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin: 1.5rem 0; padding: 1.5rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; }
+.entity { background: var(--bg2); border: 2px solid var(--blue); border-radius: 10px; min-width: 200px; overflow: hidden; }
+.entity-head { padding: 0.6rem 0.75rem; text-align: center; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; }
+.entity.purple { border-color: var(--purple); }
+.entity.purple .entity-head { background: linear-gradient(135deg,var(--purple),var(--pink)); }
+.entity.cyan { border-color: var(--cyan); }
+.entity.cyan .entity-head { background: linear-gradient(135deg,var(--cyan),var(--blue)); }
+.entity.amber { border-color: var(--amber); }
+.entity.amber .entity-head { background: linear-gradient(135deg,var(--amber),var(--red)); }
+.entity.green { border-color: var(--green); }
+.entity.green .entity-head { background: linear-gradient(135deg,var(--green),var(--cyan)); }
+.entity.pink { border-color: var(--pink); }
+.entity.pink .entity-head { background: linear-gradient(135deg,var(--pink),var(--purple)); }
+.entity-field { padding: 6px 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+.entity-field:last-child { border-bottom: none; }
+.pk { color: var(--amber); font-weight: 700; font-size: 0.65rem; padding: 1px 5px; background: rgba(251,191,36,0.12); border-radius: 3px; }
+.fk { color: var(--cyan); font-weight: 700; font-size: 0.65rem; padding: 1px 5px; background: rgba(56,189,248,0.12); border-radius: 3px; }
+.er-link { display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 1.5rem; }
+
+.sql { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 0.75rem 0; }
+.sql-head { padding: 8px 14px; background: rgba(108,114,203,0.1); border-bottom: 1px solid var(--border); font-size: 0.8rem; font-weight: 600; color: var(--blue); }
+.sql-body { padding: 0.75rem 1rem; }
+.sql-body pre { font-family: 'JetBrains Mono',monospace; font-size: 0.8rem; color: var(--cyan); line-height: 1.8; white-space: pre-wrap; }
+.sk { color: var(--purple); font-weight: 600; }
+.ss { color: var(--green); }
+.sc { color: var(--muted); font-style: italic; }
+
+.fc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; margin: 1rem 0; }
+.fc { perspective: 800px; height: 170px; cursor: pointer; }
+.fc-inner { position: relative; width: 100%; height: 100%; transition: transform 0.45s; transform-style: preserve-3d; }
+.fc.flipped .fc-inner { transform: rotateY(180deg); }
+.fc-front, .fc-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem; text-align: center; border: 1px solid var(--border); }
+.fc-front { background: rgba(108,114,203,0.1); }
+.fc-back { background: rgba(56,189,248,0.08); transform: rotateY(180deg); }
+.fc-front h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+.fc-front p { font-size: 0.8rem; color: var(--muted); }
+.fc-back h4 { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.3rem; }
+.fc-back p { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+.fc-hint { position: absolute; bottom: 10px; font-size: 0.7rem; color: var(--muted); }
+
+.quiz-q { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+.quiz-q h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; }
+.quiz-q .qtext { font-weight: 600; margin-bottom: 0.75rem; }
+.quiz-opts { display: flex; flex-direction: column; gap: 0.4rem; }
+.quiz-opt { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; transition: 0.15s; }
+.quiz-opt:hover { background: rgba(255,255,255,0.03); border-color: var(--blue); }
+.quiz-opt.correct { background: rgba(52,211,153,0.12); border-color: var(--green); color: var(--green); }
+.quiz-opt.wrong { background: rgba(248,113,113,0.12); border-color: var(--red); color: var(--red); }
+.quiz-opt.reveal-correct { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.3); }
+.opt-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.75rem; flex-shrink: 0; }
+.quiz-exp { margin-top: 0.75rem; padding: 0.75rem; background: var(--bg3); border-radius: 8px; display: none; font-size: 0.85rem; color: var(--text2); }
+.quiz-exp.show { display: block; }
+
+.cheat { background: rgba(108,114,203,0.06); border: 1px solid rgba(108,114,203,0.15); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+.cheat h3 { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--blue); }
+.cheat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; }
+.cheat-item { padding: 0.75rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.cheat-item h4 { font-size: 0.8rem; font-weight: 700; color: var(--blue); margin-bottom: 0.3rem; }
+.cheat-item p { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+
+.btt { position: fixed; bottom: 24px; right: 24px; width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg,var(--blue),var(--purple)); color: #fff; border: none; font-size: 1.1rem; cursor: pointer; z-index: 997; opacity: 0; visibility: hidden; transform: translateY(12px); transition: 0.25s; display: flex; align-items: center; justify-content: center; }
+.btt.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.btt:hover { opacity: 0.85; }
+
+.footer { text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--border); margin-top: 3rem; color: var(--muted); font-size: 0.8rem; }
+
+.cl { padding-left: 1.25rem; margin: 0.4rem 0; }
+.cl li { margin-bottom: 0.4rem; color: var(--text2); line-height: 1.7; }
+.cl li strong { color: var(--text); }
+strong { color: var(--text); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.info-cards-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; margin: 1rem 0; }
+.info-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; transition: 0.15s; }
+.info-card:hover { border-color: rgba(255,255,255,0.1); transform: translateY(-1px); }
+.info-card-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.info-card-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+.info-card-desc { font-size: 0.8rem; color: var(--text2); line-height: 1.6; }
+
+.symbol-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 0.75rem; margin: 1rem 0; }
+.symbol-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+.symbol-visual { font-family: 'JetBrains Mono',monospace; font-size: 0.8rem; color: var(--cyan); background: rgba(56,189,248,0.08); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 0.5rem; }
+.symbol-name { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem; }
+.symbol-desc { font-size: 0.8rem; color: var(--text2); }
+.symbol-example { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+
+.erd-diagram { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+.erd-canvas { display: flex; align-items: center; justify-content: center; gap: 0; min-width: 500px; position: relative; }
+.erd-entity { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.erd-box { padding: 10px 20px; border: 2px solid var(--blue); background: rgba(108,114,203,0.1); font-weight: 700; font-size: 0.85rem; color: var(--blue); min-width: 100px; text-align: center; border-radius: 4px; }
+.erd-box.weak { border-color: var(--purple); color: var(--purple); box-shadow: inset 0 0 0 3px rgba(155,109,255,0.3); }
+.erd-connector { display: flex; align-items: center; gap: 0; min-width: 120px; }
+.erd-line-h { height: 2px; background: rgba(255,255,255,0.1); flex: 1; }
+.cardinality-label { font-size: 0.7rem; font-weight: 700; color: var(--cyan); padding: 0 4px; }
+.erd-attr { display: inline-block; padding: 4px 10px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 20px; font-size: 0.75rem; color: var(--text2); background: var(--card); margin: 4px; }
+.erd-attr.key { border-color: var(--amber); color: var(--amber); }
+.erd-attr.key span { text-decoration: underline; }
+.erd-attr.multi { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.1); }
+.erd-attr.derived { border-style: dashed; }
+.erd-attr.composite { border-color: var(--purple); color: var(--purple); }
+.erd-attrs-group { display: flex; flex-wrap: wrap; justify-content: center; max-width: 200px; margin-top: 4px; }
+
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+.badge-cyan { background: rgba(56,189,248,0.12); color: var(--cyan); }
+.badge-amber { background: rgba(251,191,36,0.12); color: var(--amber); }
+.badge-blue { background: rgba(108,114,203,0.12); color: var(--blue); }
+.badge-green { background: rgba(52,211,153,0.12); color: var(--green); }
+.badge-red { background: rgba(248,113,113,0.12); color: var(--red); }
+.badge-purple { background: rgba(155,109,255,0.12); color: var(--purple); }
+
+.mindmap-branches { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 0.75rem; margin: 1rem 0; }
+.mindmap-branch { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+.mindmap-branch-title { font-weight: 700; font-size: 0.9rem; color: var(--blue); margin-bottom: 0.5rem; }
+.mindmap-leaf { font-size: 0.8rem; color: var(--text2); margin-bottom: 0.25rem; padding-left: 1rem; position: relative; }
+.mindmap-leaf::before { content: '\2192'; position: absolute; left: 0; color: var(--cyan); }
+.mindmap-subleaf { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.2rem; padding-left: 2rem; position: relative; }
+.mindmap-subleaf::before { content: '\00B7'; position: absolute; left: 1rem; color: var(--muted); }
+
+.dict-table td:first-child { font-weight: 700; color: var(--blue); white-space: nowrap; }
+
+.cf-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin: 1rem 0; }
+.cf-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; }
+.cf-symbol { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.cf-label { font-weight: 700; font-size: 0.85rem; }
+.cf-meaning { font-size: 0.75rem; color: var(--text2); margin-top: 0.25rem; }
+
+.dbl-line { border-top: 3px double var(--green); width: 80px; display: inline-block; margin: 0 4px; vertical-align: middle; }
+.sgl-line { border-top: 2px solid var(--muted); width: 80px; display: inline-block; margin: 0 4px; vertical-align: middle; }
+
+@media (max-width: 768px) {
+  .main { padding: 64px 1rem 2rem; }
+  .hero h1 { font-size: 1.6rem; }
+  .hero-stats { gap: 1.5rem; }
+  .flow { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+  .er { flex-direction: column; align-items: center; }
+  .er-link { transform: rotate(90deg); }
+  .fc-grid { grid-template-columns: 1fr; }
+  .cheat-grid { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  .cf-grid { grid-template-columns: 1fr; }
+  .mindmap-branches { grid-template-columns: 1fr; }
+  .symbol-grid { grid-template-columns: 1fr; }
+  .info-cards-grid { grid-template-columns: 1fr; }
+  .erd-canvas { min-width: 340px; }
+  .section h2 { font-size: 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div class="overlay" id="overlay"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <h3>ER & EER Modeling</h3>
+    <p>Database Design</p>
+  </div>
+  <div class="sidebar-nav" id="sideNav">
+    <a href="#s-overview" class="active">ภาพรวม</a>
+    <a href="#s-entity">Entity</a>
+    <a href="#s-attribute">Attribute</a>
+    <a href="#s-relationship">Relationship</a>
+    <a href="#s-constraints">Constraints</a>
+    <a href="#s-chen-vs-cf">Chen vs Crow's Foot</a>
+    <a href="#s-participation">Participation</a>
+    <a href="#s-mn">สร้าง Relationship จาก M:N</a>
+    <a href="#s-eer">EER Diagram</a>
+    <a href="#s-examples">ตัวอย่างประกอบ</a>
+    <a href="#s-dictionary">คำศัพท์</a>
+    <a href="#s-flash">Flashcards</a>
+    <a href="#s-quiz">Quiz</a>
+    <a href="#s-mindmap">Mind Map</a>
+    <a href="#s-cheat">Cheat Sheet</a>
+    <a href="#s-exam">Exam Notes</a>
+  </div>
+</nav>
+
+<div class="topbar">
+  <button class="menu-btn" id="menuBtn">&#9776;</button>
+  <div class="search-wrap" style="position:relative;">
+    <input type="text" id="searchIn" placeholder="ค้นหาเนื้อหา..." />
+    <div class="search-dropdown" id="searchDrop"></div>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-badge">Database Design</div>
+  <h1>การสร้างแบบจำลองข้อมูล<br>ER และ EER Modeling</h1>
+  <p>เรียนรู้การออกแบบฐานข้อมูลระดับแนวคิด ผ่าน ER Diagram และ EER Diagram ตั้งแต่ Entity, Attribute, Relationship ไปจนถึง Constraints พร้อม Quiz และ Flashcards</p>
+  <div class="hero-btns">
+    <a href="#s-overview" class="btn btn-primary">เริ่มเรียนเลย</a>
+    <a href="#s-quiz" class="btn btn-ghost">ทดสอบความรู้</a>
+  </div>
+  <div class="hero-stats">
+    <div><div class="num">16</div><div class="label">หัวข้อเรียน</div></div>
+    <div><div class="num">10</div><div class="label">Flashcards</div></div>
+    <div><div class="num">20</div><div class="label">Quiz ข้อ</div></div>
+  </div>
+</section>
+
+<!-- 1 Overview -->
+<div class="section" id="s-overview">
+  <div class="section-num">1</div>
+  <h2>ภาพรวมบทเรียน</h2>
+  <p class="sub">การสร้างแบบจำลองข้อมูล ER และ EER Modeling</p>
+  <div class="card">
+    <p>บทนี้มุ่งเน้นการออกแบบฐานข้อมูลในระดับแนวคิด (Conceptual Design) ผ่านการสร้างแบบจำลองข้อมูลที่เรียกว่า <strong>ER Diagram (Entity-Relationship Diagram)</strong> และการขยายขีดความสามารถสู่ <strong>EER Diagram (Extended/Enhanced ER Diagram)</strong> เพื่อรองรับข้อมูลที่ซับซ้อนขึ้น</p>
+  </div>
+  <div class="card">
+    <h3>วัตถุประสงค์การเรียนรู้</h3>
+    <ul class="cl">
+      <li>เข้าใจแนวคิดและวิธีการพัฒนา <strong>ERD</strong> และ <strong>EERD</strong></li>
+      <li>เข้าใจรูปแบบความสัมพันธ์ที่สำคัญระหว่างข้อมูล</li>
+      <li>สามารถแปลงกฎเกณฑ์ทางธุรกิจ (<strong>Business Rules</strong> และ <strong>Constraints</strong>) ลงใน ERD ได้อย่างถูกต้อง</li>
+      <li>รู้จักและใช้งานสัญลักษณ์ของ <strong>Chen Notation</strong> และ <strong>Crow's Foot Notation</strong> ได้</li>
+      <li>ใช้เงื่อนไขการนับปริมาณ (<strong>Cardinality</strong>) เพื่อแสดงความสัมพันธ์แบบ 1:1, 1:M และ M:N ได้</li>
+      <li>รู้กฎ เงื่อนไขเกี่ยวกับการสร้างไดอะแกรม และสามารถค้นหาข้อผิดพลาดในการออกแบบได้</li>
+    </ul>
+  </div>
+  <div class="box box-blue">
+    <h4>สิ่งสำคัญสูงสุดในบทนี้</h4>
+    <p>การตีความประโยค Business Rules, การแยกชนิด Entity (<strong>Strong/Weak</strong>), การระบุ <strong>Cardinality Constraint</strong> และการอ่านสัญลักษณ์ <strong>Chen vs Crow's Foot</strong> ให้ถูกต้อง</p>
+  </div>
+</div>
+
+<!-- 2 Entity -->
+<div class="section" id="s-entity">
+  <div class="section-num">2</div>
+  <h2>Entity (เอนทิตี)</h2>
+  <p class="sub">Strong Entity vs Weak Entity</p>
+  <div class="card">
+    <p><strong>Entity</strong> คือข้อมูลหลักของวัตถุที่ต้องการเก็บข้อมูล แบ่งเป็น 2 ประเภท ตามความสามารถในการดำรงอยู่</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-color:rgba(52,211,153,0.3);">
+      <h3 style="color:var(--green);">Strong Entity (เอนทิตีแข็งแรง)</h3>
+      <p>เอนทิตีที่สามารถคงอยู่ได้ด้วยตัวเอง มีคุณลักษณะที่เป็นเอกลักษณ์ (Primary Key) ได้โดยไม่ต้องพึ่งพาเอนทิตีอื่น</p>
+      <div style="margin-top:0.5rem;">
+        <span class="badge badge-green">สี่เหลี่ยม 1 ชั้น</span>
+      </div>
+      <p style="margin-top:0.5rem;"><strong>ตัวอย่าง:</strong> Student, Product, Order, Employee</p>
+    </div>
+    <div class="card" style="border-color:rgba(155,109,255,0.3);">
+      <h3 style="color:var(--purple);">Weak Entity (เอนทิตีอ่อนแอ)</h3>
+      <p>เอนทิตีที่ไม่สามารถคงอยู่ได้ด้วยตัวเอง ต้องอาศัยการมีอยู่ของ Strong Entity ตัวอื่น และไม่มี PK ของตัวเอง</p>
+      <div style="margin-top:0.5rem;">
+        <span class="badge badge-purple">สี่เหลี่ยม 2 ชั้น</span>
+      </div>
+      <p style="margin-top:0.5rem;"><strong>ตัวอย่าง:</strong> Cancel_Order, Club_Member, Dependent</p>
+    </div>
+  </div>
+
+  <div class="erd-diagram">
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">Strong Entity vs Weak Entity</p>
+    <div class="erd-canvas" style="gap:1.5rem; flex-wrap:wrap; justify-content:center;">
+      <div class="erd-entity">
+        <div class="erd-box" style="min-width:120px;">Order</div>
+        <span class="badge badge-green" style="margin-top:4px;">Strong Entity</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <div style="height:2px; width:30px; background:rgba(255,255,255,0.1);"></div>
+        <div style="position:relative; width:70px; height:50px; display:flex; align-items:center; justify-content:center;">
+          <div style="width:50px; height:50px; border:2px solid var(--purple); transform:rotate(45deg); background:rgba(155,109,255,0.1); position:absolute;"></div>
+          <span style="font-size:0.7rem; font-weight:700; color:var(--purple); position:relative; z-index:1;">make</span>
+        </div>
+        <div style="height:2px; width:30px; background:rgba(255,255,255,0.1);"></div>
+      </div>
+      <div class="erd-entity">
+        <div class="erd-box weak" style="min-width:140px;">Cancel_Order</div>
+        <span class="badge badge-red" style="margin-top:4px;">Weak Entity</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-cyan">
+    <h4>Master Entity vs Transaction Entity</h4>
+    <ul>
+      <li><strong>Master Entity:</strong> วัตถุหลักในระบบ ไม่ได้เกิดจากกระบวนการ เช่น Student, Product</li>
+      <li><strong>Transaction Entity:</strong> เกิดจากกระบวนการทางธุรกิจ เช่น Enrollment, Borrow, Return</li>
+    </ul>
+  </div>
+
+  <div class="box box-amber">
+    <h4>Key Takeaway</h4>
+    <p><strong>Strong</strong> = อิสระ, มี PK | <strong>Weak</strong> = พึ่งพา, ไม่มี PK เต็มรูปแบบ | สี่เหลี่ยม 1 ชั้น vs 2 ชั้น</p>
+  </div>
+</div>
+
+<!-- 3 Attribute -->
+<div class="section" id="s-attribute">
+  <div class="section-num">3</div>
+  <h2>Attribute (คุณลักษณะ)</h2>
+  <p class="sub">5 ประเภทของ Attribute ที่ต้องจำ</p>
+
+  <div class="symbol-grid">
+    <div class="symbol-card">
+      <div class="symbol-visual">( Name )</div>
+      <div class="symbol-name">Simple Attribute</div>
+      <div class="symbol-desc">แยกย่อยไม่ได้อีก ข้อมูลพื้นฐานที่สุด</div>
+      <div class="symbol-example">เช่น: ชื่อโรงเรียน, เพศ, วันเกิด</div>
+    </div>
+    <div class="symbol-card">
+      <div class="symbol-visual" style="color:var(--purple);">( Address → ถนน, จังหวัด )</div>
+      <div class="symbol-name">Composite Attribute</div>
+      <div class="symbol-desc">แตกย่อยออกเป็นส่วนย่อยๆ ได้</div>
+      <div class="symbol-example">เช่น: ที่อยู่ → บ้านเลขที่, ถนน, จังหวัด</div>
+    </div>
+    <div class="symbol-card">
+      <div class="symbol-visual" style="color:var(--amber);">( <u>StudentID</u> )</div>
+      <div class="symbol-name">Key Attribute (PK)</div>
+      <div class="symbol-desc">ห้ามซ้ำกัน (Unique) ห้ามเป็น NULL</div>
+      <div class="symbol-example">เช่น: รหัสนักศึกษา, บาร์โค้ด, ISBN</div>
+    </div>
+    <div class="symbol-card">
+      <div class="symbol-visual" style="color:var(--blue);">(( Email ))</div>
+      <div class="symbol-name">Multi-valued Attribute</div>
+      <div class="symbol-desc">1 รายการมีได้หลายค่า ใช้วงรี 2 ชั้น</div>
+      <div class="symbol-example">เช่น: เบอร์โทร, อีเมล, ปริญญาบัตร</div>
+    </div>
+    <div class="symbol-card">
+      <div class="symbol-visual" style="color:var(--green); border-style:dashed;">( - - Age - - )</div>
+      <div class="symbol-name">Derived Attribute</div>
+      <div class="symbol-desc">คำนวณมาจาก Attribute อื่น ใช้วงรีเส้นประ</div>
+      <div class="symbol-example">เช่น: Age ← Birthday, BMI ← Weight+Height</div>
+    </div>
+  </div>
+
+  <div class="box box-red">
+    <h4>ข้อควรระวัง</h4>
+    <p><strong>Derived Attribute ต้องมีตัวตั้งต้นเสมอ!</strong> ถ้าวาด BMI แต่ระบบไม่เก็บ Weight/Height → <strong>ออกแบบผิด!</strong></p>
+  </div>
+
+  <div class="box box-cyan">
+    <h4>วิธีแก้ Multi-valued Attribute</h4>
+    <p><strong>ห้าม</strong>สร้างคอลัมน์ Email1, Email2 (ผิด!) → <strong>ต้องสร้างตารางใหม่แยก</strong> แล้วเชื่อมความสัมพันธ์ 1:M แทน เพิ่มข้อมูลโดยการเพิ่ม Row แทน Column</p>
+  </div>
+</div>
+
+<!-- 4 Relationship -->
+<div class="section" id="s-relationship">
+  <div class="section-num">4</div>
+  <h2>Relationship (ความสัมพันธ์)</h2>
+  <p class="sub">Weak vs Strong Relationship</p>
+  <div class="card">
+    <p><strong>Relationship</strong> คือความเกี่ยวข้องระหว่าง Entity สัญลักษณ์คือสี่เหลี่ยมข้าวหลามตัด (Diamond) แบ่งเป็น 2 ประเภท:</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-color:rgba(108,114,203,0.3);">
+      <h3 style="color:var(--blue);">Weak Relationship (Non-Identifying)</h3>
+      <p>ความสัมพันธ์ระหว่าง <strong>Strong + Strong Entity</strong></p>
+      <div style="margin-top:0.5rem; display:flex; align-items:center; gap:8px;">
+        <div style="width:40px; height:40px; border:2px solid var(--blue); transform:rotate(45deg); background:rgba(108,114,203,0.1);"></div>
+        <span class="badge badge-blue">ข้าวหลามตัด 1 ชั้น</span>
+      </div>
+      <p style="margin-top:0.5rem;"><strong>ตัวอย่าง:</strong> Student — Study — Subject</p>
+    </div>
+    <div class="card" style="border-color:rgba(155,109,255,0.3);">
+      <h3 style="color:var(--purple);">Strong Relationship (Identifying)</h3>
+      <p>ความสัมพันธ์ระหว่าง <strong>Strong + Weak Entity</strong></p>
+      <div style="margin-top:0.5rem; display:flex; align-items:center; gap:8px;">
+        <div style="width:40px; height:40px; border:2px solid var(--purple); transform:rotate(45deg); background:rgba(155,109,255,0.1); box-shadow: inset 0 0 0 3px rgba(155,109,255,0.3);"></div>
+        <span class="badge badge-purple">ข้าวหลามตัด 2 ชั้น</span>
+      </div>
+      <p style="margin-top:0.5rem;"><strong>ตัวอย่าง:</strong> Order — make — Cancel_Order</p>
+    </div>
+  </div>
+
+  <div class="box box-red">
+    <h4>กฎเหล็กที่ต้องจำ!</h4>
+    <ul>
+      <li><strong>Strong + Strong = Weak Relationship</strong> (ข้าวหลามตัด 1 ชั้น)</li>
+      <li><strong>Strong + Weak = Strong Relationship</strong> (ข้าวหลามตัด 2 ชั้น)</li>
+    </ul>
+    <p style="margin-top:0.5rem;">นักศึกษามักจำสลับกันบ่อย! จำง่ายๆ: <strong>"มีตัวอ่อนแอมาเกาะ = ชั้นเพิ่ม"</strong></p>
+  </div>
+
+  <div class="erd-diagram">
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">Strong + Weak = Strong Relationship (2 ชั้น)</p>
+    <div class="erd-canvas" style="gap:1.5rem; flex-wrap:wrap; justify-content:center;">
+      <div class="erd-entity">
+        <div class="erd-box" style="min-width:100px;">Student</div>
+        <span class="badge badge-green" style="margin-top:4px;">Strong</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <div style="height:2px; width:30px; background:rgba(255,255,255,0.1);"></div>
+        <div style="position:relative; width:70px; height:50px; display:flex; align-items:center; justify-content:center;">
+          <div style="width:50px; height:50px; border:2px solid var(--purple); transform:rotate(45deg); background:rgba(155,109,255,0.1); position:absolute; box-shadow: inset 0 0 0 3px rgba(155,109,255,0.3);"></div>
+          <span style="font-size:0.65rem; font-weight:700; color:var(--purple); position:relative; z-index:1;">join</span>
+        </div>
+        <div style="height:2px; width:30px; background:rgba(255,255,255,0.1);"></div>
+      </div>
+      <div class="erd-entity">
+        <div class="erd-box weak" style="min-width:120px;">Club_Member</div>
+        <span class="badge badge-red" style="margin-top:4px;">Weak</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 Constraints -->
+<div class="section" id="s-constraints">
+  <div class="section-num">5</div>
+  <h2>Relationship Constraints</h2>
+  <p class="sub">Connectivity, Cardinality & Participation</p>
+  <div class="card">
+    <p>มี 3 ประเภทหลักที่ต้องเข้าใจ อาจารย์เน้นย้ำว่าเป็นหัวใจของการออกแบบ:</p>
+  </div>
+
+  <div class="info-cards-grid">
+    <div class="info-card">
+      <div class="info-card-icon" style="font-size:1.2rem; color:var(--blue);">1:1 / 1:M / M:N</div>
+      <div class="info-card-title">Connectivity Constraint</div>
+      <div class="info-card-desc">บอกชนิดของความสัมพันธ์ ได้แก่ One-to-One, One-to-Many, Many-to-Many</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon" style="font-size:1.2rem; color:var(--cyan);">(Min, Max)</div>
+      <div class="info-card-title">Cardinality Constraint</div>
+      <div class="info-card-desc">บอกปริมาณขั้นต่ำและสูงสุดของความสัมพันธ์ เช่น (1, 3), (0, M)</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon" style="font-size:1.2rem; color:var(--green);">═══ / ───</div>
+      <div class="info-card-title">Participation Constraint</div>
+      <div class="info-card-desc">บอกความจำเป็น: Mandatory (เส้นคู่) vs Optional (เส้นเดี่ยว)</div>
+    </div>
+  </div>
+
+  <div class="cf-grid">
+    <div class="cf-item">
+      <div class="cf-symbol">1:1</div>
+      <div class="cf-label">One-to-One</div>
+      <div class="cf-meaning">ตัวหนึ่งสัมพันธ์กับอีกตัวหนึ่ง</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:0.25rem;">เช่น: สามี-ภรรยา</div>
+    </div>
+    <div class="cf-item">
+      <div class="cf-symbol">1:M</div>
+      <div class="cf-label">One-to-Many</div>
+      <div class="cf-meaning">หนึ่งตัวสัมพันธ์กับหลายตัว</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:0.25rem;">เช่น: แผนก-พนักงาน</div>
+    </div>
+    <div class="cf-item">
+      <div class="cf-symbol">M:N</div>
+      <div class="cf-label">Many-to-Many</div>
+      <div class="cf-meaning">หลายตัวสัมพันธ์กับหลายตัว</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:0.25rem;">เช่น: นักศึกษา-วิชา</div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 Chen vs Crow's Foot -->
+<div class="section" id="s-chen-vs-cf">
+  <div class="section-num">6</div>
+  <h2>Chen vs Crow's Foot Notation</h2>
+  <p class="sub">จุดที่นักศึกษามักสับสนมากที่สุด</p>
+  <div class="card">
+    <p>การเขียน Cardinality มีจุดที่สับสนมากที่สุดคือ <strong>ทิศทางการอ่าน</strong> ระหว่าง Chen Notation และ Crow's Foot Notation</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-color:rgba(108,114,203,0.3);">
+      <h3 style="color:var(--blue);">Chen Notation</h3>
+      <p><strong>อ่านไขว้!</strong> ตำแหน่งของ (Min, Max) จะอยู่ฝั่ง <strong>ตรงข้าม</strong> กับ Entity ที่มันอธิบายปริมาณ</p>
+      <div class="box box-blue" style="margin-top:0.5rem; margin-bottom:0;">
+        <p>เช่น ต้องการบอกปริมาณ "วิชา" ว่ามีกี่วิชา → ตัวเลข (Min, Max) ต้องเขียนไว้ที่ฝั่ง <strong>"นักศึกษา"</strong></p>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(56,189,248,0.3);">
+      <h3 style="color:var(--cyan);">Crow's Foot Notation</h3>
+      <p><strong>อ่านตรง!</strong> สัญลักษณ์จะถูกวาดที่ฝั่ง <strong>เดียวกัน</strong> กับ Entity ที่กำลังอธิบาย</p>
+      <div class="box box-cyan" style="margin-top:0.5rem; margin-bottom:0;">
+        <p>อ่านจาก <strong>ด้านในออกด้านนอก</strong>: ใกล้จุดศูนย์กลางเส้น = Min, ปลายเส้น = Max</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="erd-diagram">
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">ตัวอย่าง: นักศึกษาลงทะเบียนวิชา</p>
+    <div style="display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-weight:700; font-size:0.9rem; color:var(--blue); margin-bottom:0.5rem;">Chen Notation</div>
+        <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem;">
+          <span style="color:var(--cyan); font-weight:700;">(30,60)</span>
+          <span style="color:var(--muted);">──</span>
+          <div style="padding:8px 16px; border:2px solid var(--blue); background:rgba(108,114,203,0.1); border-radius:4px; font-weight:700;">Student</div>
+          <span style="color:var(--muted);">──</span>
+          <div style="width:40px; height:40px; border:2px solid var(--cyan); transform:rotate(45deg); background:rgba(56,189,248,0.08); display:flex; align-items:center; justify-content:center;"><span style="transform:rotate(-45deg); font-size:0.6rem; font-weight:700; color:var(--cyan);">Enroll</span></div>
+          <span style="color:var(--muted);">──</span>
+          <div style="padding:8px 16px; border:2px solid var(--purple); background:rgba(155,109,255,0.1); border-radius:4px; font-weight:700; color:var(--purple);">Subject</div>
+          <span style="color:var(--muted);">──</span>
+          <span style="color:var(--cyan); font-weight:700;">(1,3)</span>
+        </div>
+        <p style="font-size:0.7rem; color:var(--muted); margin-top:0.5rem;">ตัวเลขอ่านไขว้: (30,60) อยู่ซ้าย แต่อธิบาย Subject</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-red">
+    <h4>จำง่ายๆ</h4>
+    <p><strong>Chen:</strong> เขียนสลับฝั่ง (ไขว้) | <strong>Crow's Foot:</strong> วาดติดกับตัวมันเองเลย (ตรง)</p>
+  </div>
+</div>
+
+<!-- 7 Participation -->
+<div class="section" id="s-participation">
+  <div class="section-num">7</div>
+  <h2>Participation Constraint</h2>
+  <p class="sub">Mandatory vs Optional & การลากเส้น</p>
+  <div class="card">
+    <p>อาจารย์สอนเทคนิคการแปลง Cardinality (Min, Max) เป็นสัญลักษณ์ Participation ดังนี้:</p>
+  </div>
+
+  <div class="box box-blue">
+    <h4>กฎการโฟกัสที่ค่า Minimum</h4>
+    <ul>
+      <li>หากฝั่งใดมี <strong>Min = 0</strong> → Optional (ทางเลือก) → ใช้ <strong>เส้นเดี่ยว</strong> (Single Line)</li>
+      <li>หากฝั่งใดมี <strong>Min ≥ 1</strong> → Mandatory (ภาคบังคับ)</li>
+    </ul>
+  </div>
+
+  <div class="box box-amber">
+    <h4>กฎการวาดเส้นคู่ (Double Line)</h4>
+    <p>ลากเส้นคู่เฉพาะเมื่อเกิดการเปรียบเทียบ <strong>"0 คู่กับ 1" (Optional vs Mandatory)</strong> เท่านั้น และเส้นคู่จะอยู่ฝั่งของ <strong>เลข 1 (Mandatory)</strong></p>
+    <ul>
+      <li><strong>0 ปะทะ 1</strong> → เส้นคู่ที่ฝั่ง Min=1 (ถูกต้อง!)</li>
+      <li><strong>0 ปะทะ 0</strong> → เส้นเดี่ยวทั้งคู่ (ไม่ใช่เส้นคู่!)</li>
+      <li><strong>1 ปะทะ 1</strong> → เส้นเดี่ยวทั้งคู่ (ไม่ใช่เส้นคู่!)</li>
+    </ul>
+  </div>
+
+  <div class="erd-diagram">
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">ตัวอย่าง: เปรียบเทียบ Participation</p>
+    <div style="display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;">
+      <div style="text-align:center; padding:1rem; background:var(--card); border-radius:10px; border:1px solid var(--border);">
+        <div style="font-weight:700; font-size:0.85rem; color:var(--green); margin-bottom:0.5rem;">Optional vs Mandatory</div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <div style="padding:6px 12px; border:2px solid var(--blue); border-radius:4px; font-size:0.8rem; font-weight:700;">Student</div>
+          <div class="sgl-line"></div>
+          <div style="padding:6px 12px; border:2px solid var(--cyan); transform:rotate(45deg); font-size:0.6rem; font-weight:700; color:var(--cyan); background:rgba(56,189,248,0.08);">join</div>
+          <div class="dbl-line"></div>
+          <div style="padding:6px 12px; border:2px solid var(--purple); border-radius:4px; font-size:0.8rem; font-weight:700; color:var(--purple);">Club</div>
+        </div>
+        <p style="font-size:0.7rem; color:var(--muted); margin-top:0.5rem;">Min=0 (Optional) vs Min=1 (Mandatory) → เส้นคู่ที่ฝั่ง Club</p>
+      </div>
+      <div style="text-align:center; padding:1rem; background:var(--card); border-radius:10px; border:1px solid var(--border);">
+        <div style="font-weight:700; font-size:0.85rem; color:var(--amber); margin-bottom:0.5rem;">Mandatory vs Mandatory</div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <div style="padding:6px 12px; border:2px solid var(--blue); border-radius:4px; font-size:0.8rem; font-weight:700;">Dept</div>
+          <div class="sgl-line"></div>
+          <div style="padding:6px 12px; border:2px solid var(--cyan); transform:rotate(45deg); font-size:0.6rem; font-weight:700; color:var(--cyan); background:rgba(56,189,248,0.08);">has</div>
+          <div class="sgl-line"></div>
+          <div style="padding:6px 12px; border:2px solid var(--purple); border-radius:4px; font-size:0.8rem; font-weight:700; color:var(--purple);">Emp</div>
+        </div>
+        <p style="font-size:0.7rem; color:var(--muted); margin-top:0.5rem;">Min=1 vs Min=1 → เส้นเดี่ยวทั้งคู่ (ไม่ใช่เส้นคู่!)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 M:N Relationship -->
+<div class="section" id="s-mn">
+  <div class="section-num">8</div>
+  <h2>หลักการสร้าง Relationship จาก M:N</h2>
+  <p class="sub">การเปลี่ยน Verb เป็น Noun</p>
+  <div class="card">
+    <p>ในกรณีที่วิเคราะห์ความสัมพันธ์แบบไป-กลับ ได้ผลลัพธ์เป็น <strong>Many-to-Many (M:N)</strong> อาจารย์ระบุว่า:</p>
+  </div>
+
+  <div class="box box-purple">
+    <h4>กฎ: เปลี่ยนคำกริยา (Verb) เป็นคำนาม (Noun)</h4>
+    <p>ในสี่เหลี่ยมข้าวหลามตัด มักจะเปลี่ยนคำกริยาให้เป็นคำนาม เช่น:</p>
+    <ul>
+      <li><strong>Enroll (ลงทะเบียน)</strong> → <strong>Enrollment (การลงทะเบียน)</strong></li>
+      <li><strong>Borrow (ยืม)</strong> → <strong>Borrowing (การยืม)</strong></li>
+    </ul>
+    <p style="margin-top:0.5rem;">เพื่อบ่งบอกถึง <strong>Transaction</strong> หรือเหตุการณ์ที่เกิดขึ้น</p>
+  </div>
+
+  <div class="erd-diagram">
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">M:N → แปลงเป็น Noun</p>
+    <div class="erd-canvas" style="gap:1rem; flex-wrap:wrap; justify-content:center;">
+      <div class="erd-entity">
+        <div class="erd-box" style="min-width:100px;">Student</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <div style="height:2px; width:20px; background:rgba(255,255,255,0.1);"></div>
+        <div style="position:relative; width:80px; height:50px; display:flex; align-items:center; justify-content:center;">
+          <div style="width:50px; height:50px; border:2px solid var(--cyan); transform:rotate(45deg); background:rgba(56,189,248,0.08); position:absolute;"></div>
+          <span style="font-size:0.6rem; font-weight:700; color:var(--cyan); position:relative; z-index:1;">Enrollment</span>
+        </div>
+        <div style="height:2px; width:20px; background:rgba(255,255,255,0.1);"></div>
+      </div>
+      <div class="erd-entity">
+        <div class="erd-box" style="min-width:100px; border-color:var(--purple); color:var(--purple); background:rgba(155,109,255,0.1);">Subject</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 EER Diagram -->
+<div class="section" id="s-eer">
+  <div class="section-num">9</div>
+  <h2>EER Diagram (Extended ER)</h2>
+  <p class="sub">Supertypes, Subtypes & Inheritance</p>
+  <div class="card">
+    <p>EER Diagram ขยายความสามารถจาก ER ปกติ เพื่อรองรับข้อมูลที่ซับซ้อนขึ้น ผ่านแนวคิด <strong>Supertype</strong> (กลุ่มแม่) และ <strong>Subtype</strong> (กลุ่มลูก) ที่มีการสืบทอด (Inheritance)</p>
+  </div>
+
+  <div class="erd-diagram">
+    <p style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:1rem;">ตัวอย่าง EER: Person → Employee, Student</p>
+    <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
+      <div class="erd-entity">
+        <div class="erd-attrs-group">
+          <div class="erd-attr key"><span>PersonID</span></div>
+          <div class="erd-attr">Name</div>
+          <div class="erd-attr">Email</div>
+        </div>
+        <div class="erd-box" style="min-width:120px; border-color:var(--amber); color:var(--amber); background:rgba(251,191,36,0.1);">Person</div>
+        <span class="badge badge-amber" style="margin-top:4px;">Supertype</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <div style="height:30px; width:2px; background:rgba(255,255,255,0.2);"></div>
+        <div style="width:40px; height:40px; border-radius:50%; border:2px solid var(--cyan); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; color:var(--cyan); background:rgba(56,189,248,0.1);">d</div>
+        <div style="display:flex; gap:2rem;">
+          <div style="height:2px; width:60px; background:rgba(255,255,255,0.2);"></div>
+          <div style="height:2px; width:60px; background:rgba(255,255,255,0.2);"></div>
+        </div>
+      </div>
+      <div style="display:flex; gap:1rem;">
+        <div class="erd-entity">
+          <div class="erd-box" style="min-width:100px; border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1);">Employee</div>
+          <div class="erd-attrs-group">
+            <div class="erd-attr">Position</div>
+            <div class="erd-attr">Salary</div>
+          </div>
+        </div>
+        <div class="erd-entity">
+          <div class="erd-box" style="min-width:100px; border-color:var(--pink); color:var(--pink); background:rgba(244,114,182,0.1);">Student</div>
+          <div class="erd-attrs-group">
+            <div class="erd-attr">Major</div>
+            <div class="erd-attr">GPA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-color:rgba(56,189,248,0.3);">
+      <h3 style="color:var(--cyan);">Disjointness Constraint</h3>
+      <div class="box box-cyan" style="margin:0;">
+        <h4>Disjoint (d) — วงกลม d</h4>
+        <p>เป็น Subtype ได้เพียง <strong>ประเภทเดียวเท่านั้น</strong> (ไม่ทับซ้อน)</p>
+        <p style="margin-top:0.3rem;"><em>เช่น: บัญชีธนาคารเป็นได้แค่ออมทรัพย์หรือกระแสรายวัน</em></p>
+      </div>
+      <div class="box box-purple" style="margin-top:0.5rem; margin-bottom:0;">
+        <h4 style="color:var(--purple);">Overlapping (o) — วงกลม o</h4>
+        <p>เป็น Subtype ได้ <strong>หลายประเภทพร้อมกัน</strong> (ทับซ้อนได้)</p>
+        <p style="margin-top:0.3rem;"><em>เช่น: พนักงานเป็นได้ทั้งวิศวกรและนักบินพร้อมกัน</em></p>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(155,109,255,0.3);">
+      <h3 style="color:var(--purple);">Completeness Constraint</h3>
+      <div class="box box-blue" style="margin:0;">
+        <h4>Total Completeness — เส้นคู่ ═══</h4>
+        <p>ข้อมูลทุกแถวใน Supertype <strong>ต้อง</strong> อยู่ใน Subtype ใด Subtype หนึ่งเสมอ</p>
+        <p style="margin-top:0.3rem;"><em>เช่น: พนักงานทุกคนต้องระบุตำแหน่งย่อยเสมอ</em></p>
+      </div>
+      <div class="box box-amber" style="margin-top:0.5rem; margin-bottom:0;">
+        <h4>Partial Completeness — เส้นเดี่ยว ───</h4>
+        <p>ข้อมูลใน Supertype <strong>อาจไม่</strong> อยู่ใน Subtype ใดๆ เลยก็ได้</p>
+        <p style="margin-top:0.3rem;"><em>เช่น: บุคคลอาจไม่ได้เป็นทั้งพนักงานและนักศึกษา</em></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-red">
+    <h4>ข้อควรระวัง</h4>
+    <p><strong>Strong + Strong = 1 ชั้น (Weak Relationship)</strong> | <strong>Strong + Weak = 2 ชั้น (Strong Relationship)</strong> — จำสลับกันบ่อย!</p>
+  </div>
+</div>
+
+<!-- 10 Examples -->
+<div class="section" id="s-examples">
+  <div class="section-num">10</div>
+  <h2>ตัวอย่างประกอบ</h2>
+  <p class="sub">ตัวอย่างจากอาจารย์ที่มักออกสอบ</p>
+
+  <div class="coll open">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่างที่ 1: ลงทะเบียนเรียน (M:N Relationship)<span class="arr">&#9660;</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>โจทย์:</strong> นักศึกษาลงทะเบียนรายวิชาได้อย่างน้อย 1 วิชา และไม่เกิน 3 วิชา ในซัมเมอร์ วิชาจะเปิดสอนได้ต้องมีนักศึกษาอย่างน้อย 30 คน และไม่เกิน 60 คน</p>
+      <ul class="cl">
+        <li><strong>Connectivity:</strong> นักศึกษา 1 คนลงหลายวิชา / วิชา 1 วิชาเรียนหลายคน → M:N</li>
+        <li><strong>Cardinality (Chen):</strong> ฝั่งขวา (Subject) → เขียน (1, 3) ไว้ชิดฝั่งซ้าย (Student)</li>
+        <li><strong>Cardinality (Chen):</strong> ฝั่งซ้าย (Student) → เขียน (30, 60) ไว้ชิดฝั่งขวา (Subject)</li>
+        <li><strong>Participation:</strong> Min ทั้งสองฝั่งคือ 1 และ 30 (มากกว่า 0 ทั้งคู่) → เส้นเดี่ยวทั้งสองฝั่ง</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่างที่ 2: สมาชิกชมรม (Strong/Weak Relationship)<span class="arr">&#9660;</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>โจทย์:</strong> นักศึกษา (Student) สมัครเป็นสมาชิกชมรม (Club Member)</p>
+      <ul class="cl">
+        <li><strong>Entity:</strong> Student = Strong Entity | Club_Member = Weak Entity (ต้องมี Student ก่อน)</li>
+        <li><strong>Relationship:</strong> Strong + Weak → Strong Relationship (ข้าวหลามตัด 2 ชั้น)</li>
+        <li><strong>Cardinality:</strong> นักศึกษาบางคนไม่ได้เข้าชมรม (Min=0), เข้าได้หลายชมรม (Max=M) → (0, M) ไว้ฝั่งตรงข้าม</li>
+        <li><strong>Cardinality:</strong> ชมรมต้องมีสมาชิกอย่างน้อย 1 คน (Min=1), รับได้หลายคน (Max=M) → (1, M) ไว้ฝั่งตรงข้าม</li>
+        <li><strong>Participation:</strong> 0 ปะทะ 1 → เส้นคู่ที่ฝั่ง Club_Member (Mandatory)</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่างที่ 3: โครงงาน (M:N พร้อม Cardinality)<span class="arr">&#9660;</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>โจทย์:</strong> นักศึกษา 1 คนต้องทำโครงงานอย่างน้อย 1 ชิ้น และไม่เกิน 2 ชิ้น โครงงาน 1 ชิ้น จะมีนักศึกษาทำได้ 5 คนเป็นอย่างมาก ขั้นต่ำคือ 1 คน</p>
+      <ul class="cl">
+        <li><strong>ฝั่งขวา (ติด Project):</strong> เขียนจำนวนของ Student คือ (1, 5)</li>
+        <li><strong>ฝั่งซ้าย (ติด Student):</strong> เขียนจำนวนของ Project คือ (1, 2)</li>
+        <li><strong>Participation:</strong> Min เป็น 1 ปะทะ 1 (ไม่มี 0) → เส้นเดี่ยวทั้งคู่</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="coll">
+    <div class="coll-head" onclick="toggleColl(this)">ตัวอย่างที่ 4: EER - สถานะพนักงาน<span class="arr">&#9660;</span></div>
+    <div class="coll-body"><div class="coll-inner">
+      <p><strong>โจทย์:</strong> พนักงาน สามารถเป็นได้ทั้ง วิศวกร และ นักบิน พร้อมกัน</p>
+      <ul class="cl">
+        <li><strong>Disjointness:</strong> "พร้อมกัน" → <strong>Overlapping (o)</strong></li>
+        <li><strong>Completeness:</strong> พนักงานทุกคนต้องระบุตำแหน่งย่อยเสมอ → <strong>Total Completeness (เส้นคู่)</strong></li>
+      </ul>
+    </div></div>
+  </div>
+</div>
+
+<!-- 11 Dictionary -->
+<div class="section" id="s-dictionary">
+  <div class="section-num">11</div>
+  <h2>คำศัพท์สำคัญ</h2>
+  <p class="sub">Terms ที่ต้องอธิบายได้ทุกคำ</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="dict-table">
+      <thead><tr><th>คำศัพท์</th><th>ความหมาย</th></tr></thead>
+      <tbody>
+        <tr><td>Business Rule</td><td>กฎเกณฑ์ทางธุรกิจ ประโยคบอกเล่าการทำงานที่ใช้วิเคราะห์เพื่อสร้าง Entity และ Relationship</td></tr>
+        <tr><td>Business Constraint</td><td>เงื่อนไขทางธุรกิจที่เจาะจง "ปริมาณ" เข้ามาด้วย (ก่อให้เกิด Cardinality)</td></tr>
+        <tr><td>Cardinality</td><td>ปริมาณขั้นต่ำ (Min) และขั้นสูง (Max) ในความสัมพันธ์ รูปแบบ (Min, Max)</td></tr>
+        <tr><td>Connectivity</td><td>ชนิดของความสัมพันธ์: 1:1, 1:M, M:N</td></tr>
+        <tr><td>Participation</td><td>ความจำเป็นในการมีส่วนร่วม: Mandatory (เส้นคู่) vs Optional (เส้นเดี่ยว)</td></tr>
+        <tr><td>Unary Relationship</td><td>ความสัมพันธ์ที่เกิดขึ้นภายใน Entity ชนิดเดียวกัน เช่น Employee manages Employee</td></tr>
+        <tr><td>Binary Relationship</td><td>ความสัมพันธ์ที่เกิดขึ้นระหว่าง 2 Entity</td></tr>
+        <tr><td>Ternary Relationship</td><td>ความสัมพันธ์ที่เชื่อมโยง 3 Entity เข้าด้วยกัน เช่น แพทย์-ยา-คนไข้</td></tr>
+        <tr><td>Strong Entity</td><td>เอนทิตีที่อยู่ได้ด้วยตัวเอง มี PK เป็นของตัวเอง สี่เหลี่ยม 1 ชั้น</td></tr>
+        <tr><td>Weak Entity</td><td>เอนทิตีที่ต้องพึ่งพา Strong Entity ไม่มี PK เต็มรูปแบบ สี่เหลี่ยม 2 ชั้น</td></tr>
+        <tr><td>Weak Relationship</td><td>ความสัมพันธ์ระหว่าง Strong + Strong = ข้าวหลามตัด 1 ชั้น</td></tr>
+        <tr><td>Strong Relationship</td><td>ความสัมพันธ์ระหว่าง Strong + Weak = ข้าวหลามตัด 2 ชั้น</td></tr>
+        <tr><td>Subtype Discriminator</td><td>แอตทริบิวต์ใน Supertype ที่ใช้บ่งบอกว่าแถวข้อมูลนั้นเป็น Subtype ประเภทใด</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 12 Flashcards -->
+<div class="section" id="s-flash">
+  <div class="section-num">12</div>
+  <h2>Flashcards</h2>
+  <p class="sub">คลิกเพื่อพลิกการ์ด - ทบทวนคำศัพท์</p>
+  <div class="fc-grid">
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Strong + Strong</h4><p>Relationship ชั้นเดียวหรือ 2 ชั้น?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Weak Relationship (1 ชั้น)</h4><p>Strong + Strong = ข้าวหลามตัด 1 ชั้น (Non-Identifying)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Strong + Weak</h4><p>Relationship ชั้นเดียวหรือ 2 ชั้น?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Strong Relationship (2 ชั้น)</h4><p>Strong + Weak = ข้าวหลามตัด 2 ชั้น (Identifying)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Chen Notation</h4><p>อ่าน Cardinality อย่างไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>อ่านไขว้!</h4><p>ตัวเลขฝั่งซ้ายคือปริมาณของตารางฝั่งขวา (สลับข้าง)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Crow's Foot</h4><p>อ่าน Cardinality อย่างไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>อ่านตรง!</h4><p>สัญลักษณ์ฝั่งซ้ายคือปริมาณของตารางฝั่งซ้าย (ติดกัน)</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>เส้นคู่</h4><p>ลากเส้นคู่เมื่อใด?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>เส้นคู่ = Mandatory</h4><p>ลากเฉพาะเมื่อ "0 ปะทะ 1" (Optional vs Mandatory) เท่านั้น เส้นคู่อยู่ฝั่งเลข 1</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Disjoint (d)</h4><p>d vs o ต่างกัน?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Disjoint = ห้ามควบตำแหน่ง</h4><p>เป็น Subtype ได้แค่อย่างเดียวเท่านั้น ไม่ทับซ้อน</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Overlapping (o)</h4><p>d vs o ต่างกัน?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>Overlapping = ควบตำแหน่งได้</h4><p>เป็น Subtype ได้หลายอย่างพร้อมกัน ทับซ้อนได้</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Total Completeness</h4><p>เส้นคู่หรือเส้นเดี่ยว?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>เส้นคู่ ═══</h4><p>Supertype ทุกตัวต้องถูกจัดลง Subtype ใด Subtype หนึ่งเสมอ</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>M:N → Noun</h4><p>M:N เปลี่ยน Verb อย่างไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>เปลี่ยน Verb → Noun</h4><p>เช่น Enroll → Enrollment, Borrow → Borrowing เพื่อบ่งบอก Transaction</p></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('flipped')"><div class="fc-inner"><div class="fc-front"><h4>Multi-valued</h4><p>วิธีแก้ที่ถูกคืออะไร?</p><span class="fc-hint">คลิกเพื่อพลิก</span></div><div class="fc-back"><h4>สร้างตารางใหม่แยก</h4><p>ห้ามสร้าง Email1, Email2 ให้สร้างตารางใหม่แล้วเชื่อม 1:M เพิ่ม Row แทน Column</p></div></div></div>
+  </div>
+</div>
+
+<!-- 13 Quiz -->
+<div class="section" id="s-quiz">
+  <div class="section-num">13</div>
+  <h2>Quiz 20 ข้อ</h2>
+  <p class="sub">Multiple Choice - ตรวจคำตอบทันที</p>
+  <div id="quizWrap">
+    <div id="quizContainer"></div>
+  </div>
+</div>
+
+<!-- 14 Mind Map -->
+<div class="section" id="s-mindmap">
+  <div class="section-num">14</div>
+  <h2>Mind Map — ER & EER Modeling</h2>
+  <p class="sub">ภาพรวมของบทเรียน</p>
+
+  <div class="mindmap-branches">
+    <div class="mindmap-branch">
+      <div class="mindmap-branch-title">Entity (วัตถุ)</div>
+      <div class="mindmap-leaf"><strong>By Strength</strong></div>
+      <div class="mindmap-subleaf">Strong Entity — ตารางหลัก, มี PK, สี่เหลี่ยม 1 ชั้น</div>
+      <div class="mindmap-subleaf">Weak Entity — [[ ]] พึ่งพาตารางหลัก, สี่เหลี่ยม 2 ชั้น</div>
+      <div class="mindmap-leaf"><strong>By Role</strong></div>
+      <div class="mindmap-subleaf">Master Entity — วัตถุหลัก</div>
+      <div class="mindmap-subleaf">Transaction Entity — กระบวนการ</div>
+    </div>
+
+    <div class="mindmap-branch">
+      <div class="mindmap-branch-title">Attribute (คุณลักษณะ)</div>
+      <div class="mindmap-leaf">Simple — วงรีปกติ แยกไม่ได้</div>
+      <div class="mindmap-leaf">Key / PK — ขีดเส้นใต้ ห้ามซ้ำ</div>
+      <div class="mindmap-leaf">Composite — แตกกิ่งได้ (Address)</div>
+      <div class="mindmap-leaf">Multi-valued — (( )) แก้ด้วย 1:M</div>
+      <div class="mindmap-leaf">Derived — เส้นประ ต้องมีตัวตั้งต้น</div>
+    </div>
+
+    <div class="mindmap-branch">
+      <div class="mindmap-branch-title">Relationship (ข้าวหลามตัด)</div>
+      <div class="mindmap-leaf"><strong>Weak R. (1 ชั้น)</strong> = Strong + Strong</div>
+      <div class="mindmap-leaf"><strong>Strong R. (2 ชั้น)</strong> = Strong + Weak</div>
+      <div class="mindmap-leaf"><strong>Connectivity</strong></div>
+      <div class="mindmap-subleaf">1:1, 1:M, M:N</div>
+      <div class="mindmap-leaf"><strong>M:N → เปลี่ยน Verb เป็น Noun</strong></div>
+    </div>
+
+    <div class="mindmap-branch">
+      <div class="mindmap-branch-title">Constraints (เงื่อนไข)</div>
+      <div class="mindmap-leaf"><strong>Cardinality (Min, Max)</strong></div>
+      <div class="mindmap-subleaf">Chen: อ่านไขว้ (สลับฝั่ง)</div>
+      <div class="mindmap-subleaf">Crow's Foot: อ่านตรง (ติดกัน)</div>
+      <div class="mindmap-leaf"><strong>Participation</strong></div>
+      <div class="mindmap-subleaf">Min=0 → Optional → เส้นเดี่ยว</div>
+      <div class="mindmap-subleaf">Min≥1 → Mandatory → เส้นคู่ (เมื่อเทียบกับฝั่ง 0)</div>
+    </div>
+
+    <div class="mindmap-branch">
+      <div class="mindmap-branch-title">EER Diagram (Extended ER)</div>
+      <div class="mindmap-leaf">Supertype → Subtype + Inheritance</div>
+      <div class="mindmap-leaf"><strong>Disjointness</strong></div>
+      <div class="mindmap-subleaf">(d) Disjoint — เลือกได้แค่อย่างเดียว</div>
+      <div class="mindmap-subleaf">(o) Overlapping — เป็นได้หลายอย่าง</div>
+      <div class="mindmap-leaf"><strong>Completeness</strong></div>
+      <div class="mindmap-subleaf">Total (เส้นคู่) — บังคับต้องอยู่ใน Subtype</div>
+      <div class="mindmap-subleaf">Partial (เส้นเดี่ยว) — ไม่บังคับ</div>
+    </div>
+  </div>
+</div>
+
+<!-- 15 Cheat Sheet -->
+<div class="section" id="s-cheat">
+  <div class="section-num">15</div>
+  <h2>Cheat Sheet — สรุปก่อนสอบ</h2>
+  <p class="sub">ER & EER Modeling Quick Reference</p>
+
+  <div class="cheat">
+    <h3>Quick Reference — ER & EER</h3>
+
+    <p style="font-weight:700; color:var(--blue); margin-bottom:0.5rem;">1. Entity</p>
+    <div class="cheat-grid" style="margin-bottom:1rem;">
+      <div class="cheat-item"><h4>Strong Entity</h4><p>อยู่ด้วยตัวเองได้ มี PK สี่เหลี่ยม 1 ชั้น</p></div>
+      <div class="cheat-item"><h4>Weak Entity</h4><p>ต้องพึ่งพาหลัก [[ ]] สี่เหลี่ยม 2 ชั้น</p></div>
+    </div>
+
+    <p style="font-weight:700; color:var(--blue); margin-bottom:0.5rem;">2. Relationship</p>
+    <div class="cheat-grid" style="margin-bottom:1rem;">
+      <div class="cheat-item"><h4>Strong + Strong = 1 ชั้น</h4><p>Weak Relationship (Non-Identifying)</p></div>
+      <div class="cheat-item"><h4>Strong + Weak = 2 ชั้น</h4><p>Strong Relationship (Identifying)</p></div>
+      <div class="cheat-item"><h4>M:N → Noun</h4><p>เปลี่ยน Enroll → Enrollment</p></div>
+    </div>
+
+    <p style="font-weight:700; color:var(--blue); margin-bottom:0.5rem;">3. Cardinality (Chen vs Crow's Foot)</p>
+    <div class="cheat-grid" style="margin-bottom:1rem;">
+      <div class="cheat-item"><h4>Chen: อ่านไขว้</h4><p>ตัวเลขฝั่งซ้าย = ปริมาณฝั่งขวา</p></div>
+      <div class="cheat-item"><h4>Crow's Foot: อ่านตรง</h4><p>สัญลักษณ์ฝั่งซ้าย = ปริมาณฝั่งซ้าย</p></div>
+      <div class="cheat-item"><h4>&#9675; | &#8916;</h4><p>วงกลม=0, ขีด=1, สามนิ้ว=M</p></div>
+    </div>
+
+    <p style="font-weight:700; color:var(--blue); margin-bottom:0.5rem;">4. Participation</p>
+    <div class="cheat-grid" style="margin-bottom:1rem;">
+      <div class="cheat-item"><h4>เส้นคู่ = Mandatory</h4><p>ลากเฉพาะ "0 ปะทะ 1" ที่ฝั่งเลข 1</p></div>
+      <div class="cheat-item"><h4>เส้นเดี่ยว = Optional</h4><p>0 ปะทะ 0 หรือ 1 ปะทะ 1 = เส้นเดี่ยวทั้งคู่</p></div>
+    </div>
+
+    <p style="font-weight:700; color:var(--blue); margin-bottom:0.5rem;">5. EER Diagram</p>
+    <div class="cheat-grid">
+      <div class="cheat-item"><h4>(d) Disjoint</h4><p>ห้ามควบตำแหน่ง เลือกได้แค่อย่างเดียว</p></div>
+      <div class="cheat-item"><h4>(o) Overlapping</h4><p>ควบตำแหน่งได้หลายอย่างพร้อมกัน</p></div>
+      <div class="cheat-item"><h4>Total (เส้นคู่)</h4><p>ทุกตัวต้องเป็นลูก</p></div>
+      <div class="cheat-item"><h4>Partial (เส้นเดี่ยว)</h4><p>เป็นตัวลอยๆ ไม่เข้าหมวดลูกก็ได้</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 16 Exam Notes -->
+<div class="section" id="s-exam">
+  <div class="section-num">16</div>
+  <h2>Exam Notes</h2>
+  <p class="sub">เคล็ดลับการเก็งข้อสอบ</p>
+
+  <div class="box box-pink">
+    <h4>1. โจทย์บรรยาย Business Rule</h4>
+    <p>เตรียมตัวพบโจทย์ที่บรรยายสถานการณ์เช่น "ลูกค้า 1 คนจองสินค้าได้สูงสุด 10 ชิ้น สินค้าอาจจะไม่ถูกจองเลยก็ได้..." แล้วให้ออกแบบ ERD พร้อมระบุ Cardinality (Min, Max) ให้ถูกต้อง ระวังการวางตำแหน่งฝั่งซ้าย-ขวาใน Chen Notation</p>
+  </div>
+
+  <div class="box box-pink">
+    <h4>2. การแปลง M:N เป็น Weak Entity/Strong Relationship</h4>
+    <p>กรณีลงทะเบียนเรียน (Student - Subject) หรือสมาชิกชมรม (Student - Club Member) จะต้องเปลี่ยนข้าวหลามตัดตรงกลางให้รองรับ Relationship หรือแปลงสภาพได้อย่างไร</p>
+  </div>
+
+  <div class="box box-pink">
+    <h4>3. การวิเคราะห์ EER Hierarchy Constraints</h4>
+    <p>โจทย์มักให้สถานการณ์เช่น "พนักงานสามารถเป็นได้ทั้งวิศวกรและนักบินพร้อมกัน" (Overlapping 'o') และ "พนักงานทุกคนต้องระบุตำแหน่งย่อยเสมอ" (Total Completeness เส้นคู่)</p>
+  </div>
+
+  <div class="box box-amber">
+    <h4>สรุปสิ่งที่ต้องจำ (Exam Focus!)</h4>
+    <ul class="cl">
+      <li><strong>Chen vs Crow's Foot:</strong> Chen อ่านไขว้ / Crow's Foot อ่านตรง</li>
+      <li><strong>Strong + Strong = 1 ชั้น:</strong> Weak Relationship</li>
+      <li><strong>Strong + Weak = 2 ชั้น:</strong> Strong Relationship</li>
+      <li><strong>เส้นคู่:</strong> ลากเฉพาะ "0 ปะทะ 1" ที่ฝั่ง Min=1 เท่านั้น</li>
+      <li><strong>M:N → เปลี่ยน Verb เป็น Noun:</strong> Enroll → Enrollment</li>
+      <li><strong>EER d vs o:</strong> d=ห้ามควบ / o=ควบได้</li>
+      <li><strong>EER Total vs Partial:</strong> เส้นคู่=บังคับ / เส้นเดี่ยว=ไม่บังคับ</li>
+    </ul>
+  </div>
+
+  <div class="box box-red">
+    <h4>ข้อควรระวัง - นักศึกษามักสับสน</h4>
+    <ul>
+      <li><strong>เส้นคู่ผิดจุด:</strong> ลากเส้นคู่เฉพาะ "0 ปะทะ 1" เท่านั้น ไม่ใช่ "1 ปะทะ 1"</li>
+      <li><strong>Strong/Weak Relationship สลับ:</strong> จำว่า "มีตัวอ่อนแอมาเกาะ = ชั้นเพิ่ม"</li>
+      <li><strong>ค่า Minimum เริ่มต้น:</strong> หากโจทย์ไม่บอก ให้พิจารณาจากโลกความจริง ถ้าเว้นว่างได้ Min=0 ถ้าไม่ได้ Min=1</li>
+    </ul>
+  </div>
+</div>
+
+</main>
+
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<footer class="footer">
+  <p>ER & EER Modeling — Database Design Interactive Learning</p>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const sidebar = $('#sidebar'), overlay = $('#overlay');
+$('#menuBtn').onclick = () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); };
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+$$('.sidebar-nav a').forEach(a => a.addEventListener('click', () => { if(innerWidth<=768){sidebar.classList.remove('open');overlay.classList.remove('show');} }));
+
+const secs = $$('.section'), navAs = $$('.sidebar-nav a');
+const onScroll = () => {
+  let cur = '';
+  secs.forEach(s => { if(scrollY >= s.offsetTop - 80) cur = s.id; });
+  navAs.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+  const h = document.documentElement.scrollHeight - innerHeight;
+  $('#progress').style.width = (scrollY / h * 100) + '%';
+  $('#btt').classList.toggle('show', scrollY > 400);
+};
+addEventListener('scroll', onScroll);
+
+function toggleColl(h) { h.parentElement.classList.toggle('open'); }
+
+function switchTab(e, id) {
+  const c = e.target.closest('.tabs');
+  c.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  c.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+const sData = [
+  {t:'ภาพรวม',c:'ER EER Modeling Database Design Conceptual Design Business Rules',s:'s-overview'},
+  {t:'Entity',c:'Strong Weak Master Transaction สี่เหลี่ยม 1 ชั้น 2 ชั้น Order Cancel_Order',s:'s-entity'},
+  {t:'Attribute',c:'Simple Composite Key Primary Key Multi-valued Derived วงรี เส้นประ',s:'s-attribute'},
+  {t:'Relationship',c:'Weak Strong ข้าวหลามตัด 1 ชั้น 2 ชั้น Non-Identifying Identifying',s:'s-relationship'},
+  {t:'Constraints',c:'Connectivity Cardinality Participation 1:1 1:M M:N Min Max',s:'s-constraints'},
+  {t:'Chen vs Crow\'s Foot',c:'อ่านไขว้ อ่านตรง สลับฝั่ง Cardinality Notation',s:'s-chen-vs-cf'},
+  {t:'Participation',c:'Mandatory Optional เส้นคู่ เส้นเดี่ยว Double Line Single Line Min 0 1',s:'s-participation'},
+  {t:'M:N Relationship',c:'Verb Noun Enrollment Borrowing Transaction',s:'s-mn'},
+  {t:'EER Diagram',c:'Extended ER Supertype Subtype Inheritance Disjoint Overlapping Total Partial Completeness',s:'s-eer'},
+  {t:'ตัวอย่างประกอบ',c:'ลงทะเบียนเรียน สมาชิกชมรม โครงงาน สถานะพนักงาน',s:'s-examples'},
+  {t:'คำศัพท์',c:'Business Rule Constraint Cardinality Connectivity Participation Unary Binary Ternary',s:'s-dictionary'},
+  {t:'Flashcards',c:'การ์ดทบทวน Strong Weak Chen Crow\'s Foot Disjoint Overlapping',s:'s-flash'},
+  {t:'Quiz 20 ข้อ',c:'ทดสอบ Multiple Choice MCQ เฉลย ER EER Notation',s:'s-quiz'},
+  {t:'Mind Map',c:'ภาพรวม สรุป Entity Attribute Relationship Constraints EER',s:'s-mindmap'},
+  {t:'Cheat Sheet',c:'สรุปก่อนสอบ Quick Reference Chen Crow\'s Foot EER',s:'s-cheat'},
+  {t:'Exam Notes',c:'เคล็ดลับ ข้อสอบ Business Rule M:N EER Hierarchy',s:'s-exam'}
+];
+const sIn = $('#searchIn'), sDrop = $('#searchDrop');
+sIn.addEventListener('input', e => {
+  const q = e.target.value.toLowerCase().trim();
+  if(q.length < 2){ sDrop.classList.remove('show'); return; }
+  const r = sData.filter(i => i.t.toLowerCase().includes(q) || i.c.toLowerCase().includes(q));
+  if(r.length){
+    sDrop.innerHTML = r.map(i=>`<div class="search-item" onclick="goSec('${i.s}')"><h4>${i.t}</h4><p>${i.c.substring(0,70)}...</p></div>`).join('');
+    sDrop.classList.add('show');
+  } else {
+    sDrop.innerHTML = '<div class="search-item"><p>ไม่พบผลลัพธ์</p></div>';
+    sDrop.classList.add('show');
+  }
+});
+function goSec(id){ sDrop.classList.remove('show'); sIn.value=''; document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+document.addEventListener('click', e => { if(!e.target.closest('.search-wrap')) sDrop.classList.remove('show'); });
+
+const QUIZ_DATA = [
+  { q: "Weak Entity สัญลักษณ์คืออะไร?", opts: ["สี่เหลี่ยม 1 ชั้น", "สี่เหลี่ยม 2 ชั้น", "วงรี 2 ชั้น", "ข้าวหลามตัด 2 ชั้น"], ans: 1, exp: "Weak Entity ใช้สี่เหลี่ยมผืนผ้า 2 ชั้น เพราะต้องพึ่งพา Strong Entity" },
+  { q: "Strong Entity + Strong Entity = ?", opts: ["Strong Relationship (2 ชั้น)", "Weak Relationship (1 ชั้น)", "M:N Relationship", "Unary Relationship"], ans: 1, exp: "Strong + Strong = Weak Relationship (Non-Identifying) ข้าวหลามตัด 1 ชั้น" },
+  { q: "Strong Entity + Weak Entity = ?", opts: ["Weak Relationship (1 ชั้น)", "Strong Relationship (2 ชั้น)", "Binary Relationship", "Ternary Relationship"], ans: 1, exp: "Strong + Weak = Strong Relationship (Identifying) ข้าวหลามตัด 2 ชั้น" },
+  { q: "Chen Notation อ่าน Cardinality อย่างไร?", opts: ["อ่านตรง", "อ่านไขว้ (สลับฝั่ง)", "อ่านจากซ้ายไปขวา", "อ่านจากบนลงล่าง"], ans: 1, exp: "Chen Notation อ่านไขว้ ตัวเลขฝั่งซ้ายคือปริมาณของตารางฝั่งขวา" },
+  { q: "Crow's Foot Notation อ่าน Cardinality อย่างไร?", opts: ["อ่านไขว้", "อ่านตรง (ติดกัน)", "อ่านจากขวาไปซ้าย", "อ่านจากล่างขึ้นบน"], ans: 1, exp: "Crow's Foot อ่านตรง สัญลักษณ์ฝั่งซ้ายคือปริมาณของตารางฝั่งซ้าย" },
+  { q: "ควรลากเส้นคู่ (Double Line) เมื่อใด?", opts: ["เมื่อมี M:N Relationship", "เมื่อ Min ทั้งสองฝั่งเท่ากัน", "เมื่อเกิดการเปรียบเทียบ 0 ปะทะ 1 เท่านั้น", "เมื่อมี Weak Entity"], ans: 2, exp: "เส้นคู่ลากเฉพาะเมื่อ '0 ปะทะ 1' (Optional vs Mandatory) เท่านั้น เส้นคู่อยู่ฝั่ง Min=1" },
+  { q: "M:N Relationship ใน Chen Notation นิยมเปลี่ยนคำกริยาเป็นอะไร?", opts: ["คำสรรพนาม", "คำนาม (Noun)", "คำวิเศษณ์", "ไม่ต้องเปลี่ยน"], ans: 1, exp: "เปลี่ยน Verb → Noun เช่น Enroll → Enrollment เพื่อบ่งบอก Transaction" },
+  { q: "Disjoint (d) ใน EER หมายความว่าอย่างไร?", opts: ["เป็นได้หลายอย่างพร้อมกัน", "เป็นได้แค่อย่างเดียวเท่านั้น", "ต้องเป็นทุก Subtype", "ไม่ต้องเป็น Subtype"], ans: 1, exp: "Disjoint = ห้ามควบตำแหน่ง เป็น Subtype ได้แค่อย่างเดียว" },
+  { q: "Overlapping (o) ใน EER หมายความว่าอย่างไร?", opts: ["เลือกได้แค่อย่างเดียว", "เป็นได้หลาย Subtype พร้อมกัน", "ไม่ต้องอยู่ใน Subtype", "ต้องอยู่ทุก Subtype"], ans: 1, exp: "Overlapping = ควบตำแหน่งได้ เป็น Subtype ได้หลายอย่างพร้อมกัน" },
+  { q: "Total Completeness ใช้สัญลักษณ์ใด?", opts: ["เส้นเดี่ยว", "เส้นคู่", "เส้นประ", "วงกลม"], ans: 1, exp: "Total = เส้นคู่ ═══ บังคับว่าทุกแถวต้องอยู่ใน Subtype" },
+  { q: "Partial Completeness หมายความว่าอย่างไร?", opts: ["ทุกแถวต้องอยู่ใน Subtype", "บางแถวอาจไม่อยู่ใน Subtype", "ต้องอยู่ทุก Subtype", "ห้ามอยู่ใน Subtype"], ans: 1, exp: "Partial = เส้นเดี่ยว ข้อมูลใน Supertype บางตัวอาจไม่อยู่ใน Subtype ใดๆ" },
+  { q: "Multi-valued Attribute วิธีแก้ที่ถูกคืออะไร?", opts: ["สร้าง Email1, Email2", "สร้างตารางใหม่แล้วเชื่อม 1:M", "เก็บในช่องเดียว", "ลบข้อมูลส่วนเกินออก"], ans: 1, exp: "สร้างตารางใหม่แยก แล้วเชื่อม 1:M เพิ่ม Row แทน Column" },
+  { q: "Derived Attribute ต้องมีเงื่อนไขใด?", opts: ["ต้องเป็นค่าคงที่", "ต้องมี Attribute ต้นทางให้คำนวณ", "ต้องขีดเส้นใต้", "ต้องอยู่ในตารางแยก"], ans: 1, exp: "Derived Attribute ต้องมีตัวตั้งต้นเสมอ เช่น BMI ต้องมี Weight+Height" },
+  { q: "Weak Relationship (Non-Identifying) เกิดจาก?", opts: ["Strong + Weak", "Strong + Strong", "Weak + Weak", "Subtype + Supertype"], ans: 1, exp: "Weak Relationship = Strong + Strong = ข้าวหลามตัด 1 ชั้น" },
+  { q: "Strong Relationship (Identifying) เกิดจาก?", opts: ["Strong + Strong", "Strong + Weak", "Weak + Weak", "Unary"], ans: 1, exp: "Strong Relationship = Strong + Weak = ข้าวหลามตัด 2 ชั้น" },
+  { q: "Cardinality (0, M) หมายความว่าอย่างไร?", opts: ["ต้องมีอย่างน้อย 1", "ไม่มีก็ได้ หรือมีได้หลาย", "มีได้แค่ 1 ตัว", "ห้ามมีเลย"], ans: 1, exp: "(0, M) = Min 0 (Optional) Max M (Many) ไม่มีก็ได้ หรือมีได้หลายรายการ" },
+  { q: "ถ้า Min ทั้งสองฝั่งเป็น 1 ปะทะ 1 ควรใช้เส้นแบบใด?", opts: ["เส้นคู่ทั้งสองฝั่ง", "เส้นเดี่ยวทั้งสองฝั่ง", "เส้นคู่ฝั่งเดียว", "ไม่ต้องลากเส้น"], ans: 1, exp: "1 ปะทะ 1 = Mandatory ทั้งคู่ ไม่มี 0 มาเกี่ยวข้อง → เส้นเดี่ยวทั้งคู่" },
+  { q: "Subtype Discriminator คืออะไร?", opts: ["คีย์หลักของ Subtype", "แอตทริบิวต์ที่ใช้แยกว่าเป็น Subtype ใด", "ความสัมพันธ์ระหว่าง Subtype", "จำนวน Subtype"], ans: 1, exp: "Subtype Discriminator คือ Attribute ใน Supertype ที่ใช้แยกประเภทข้อมูล" },
+  { q: "Unary Relationship คืออะไร?", opts: ["ระหว่าง 2 Entity", "ระหว่าง 3 Entity", "Entity สัมพันธ์กับตัวเอง", "ไม่มี Entity"], ans: 2, exp: "Unary = Self-Relationship เช่น Employee manages Employee" }
+];
+
+let quizAnswers = {};
+let quizScore = 0;
+let answeredCount = 0;
+
+function renderQuiz() {
+  const c = document.getElementById('quizContainer');
+  c.innerHTML = '';
+  QUIZ_DATA.forEach((q, i) => {
+    const answered = quizAnswers[i];
+    const keys = ['A','B','C','D'];
+    let cls = '';
+    if(answered !== undefined){
+      if(answered === q.ans) cls = 'correct';
+      else cls = 'wrong';
+    }
+    const optsHtml = q.opts.map((o, j) => {
+      let oc = '';
+      if(answered !== undefined){
+        if(j === q.ans) oc = 'correct';
+        else if(j === answered && j !== q.ans) oc = 'wrong';
+        else if(j === q.ans && answered !== j) oc = 'reveal-correct';
+      }
+      return `<div class="quiz-opt ${oc}" onclick="answerQuiz(${i},${j})" ${answered!==undefined?'style="pointer-events:none"':''}><span class="opt-mark">${keys[j]}</span><span>${o}</span></div>`;
+    }).join('');
+    const expHtml = answered !== undefined
+      ? `<div class="quiz-exp show"><strong>${answered===q.ans?'&#10004; ถูกต้อง!':'&#10008; ผิด!'}</strong> ${q.exp}</div>`
+      : '';
+    c.innerHTML += `<div class="quiz-q" style="${answered!==undefined&&answered===q.ans?'border-color:rgba(52,211,153,0.3)':answered!==undefined?'border-color:rgba(248,113,113,0.3)':''}"><h4>ข้อ ${i+1}/${QUIZ_DATA.length}</h4><p class="qtext">${q.q}</p><div class="quiz-opts">${optsHtml}</div>${expHtml}</div>`;
+  });
+  const pct = Math.round((quizScore / QUIZ_DATA.length) * 100);
+  if(answeredCount > 0) {
+    let scoreDiv = document.getElementById('quizScore');
+    if(!scoreDiv){
+      scoreDiv = document.createElement('div');
+      scoreDiv.id = 'quizScore';
+      scoreDiv.className = 'card';
+      scoreDiv.style.textAlign = 'center';
+      scoreDiv.style.padding = '1.5rem';
+      scoreDiv.style.marginBottom = '0.75rem';
+      c.parentNode.insertBefore(scoreDiv, c);
+    }
+    scoreDiv.innerHTML = `<div style="font-size:2rem;font-weight:900;color:var(--blue);">${quizScore}/${QUIZ_DATA.length}</div><p style="color:var(--text2);margin:0.25rem 0;">คะแนนของคุณ (${pct}%)</p><p style="color:var(--muted);font-size:0.8rem;">ตอบแล้ว ${answeredCount}/${QUIZ_DATA.length}</p>`;
+  }
+}
+
+function answerQuiz(qIdx, optIdx) {
+  if(quizAnswers[qIdx] !== undefined) return;
+  quizAnswers[qIdx] = optIdx;
+  if(optIdx === QUIZ_DATA[qIdx].ans) quizScore++;
+  answeredCount++;
+  renderQuiz();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderQuiz();
+  onScroll();
+});
+</script>
+</body>
+</html>
