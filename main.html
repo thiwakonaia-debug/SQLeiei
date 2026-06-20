@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Learning Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --bg2: #161822;
+  --bg3: #1e2030;
+  --card: #1a1d2e;
+  --border: rgba(255,255,255,0.06);
+  --text: #e2e4ed;
+  --text2: #9ba0b8;
+  --muted: #5c6078;
+  --blue: #6c72cb;
+  --purple: #9b6dff;
+  --cyan: #38bdf8;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter','Noto Sans Thai',sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; }
+
+.hero {
+  text-align: center;
+  padding: 4rem 1.5rem 2rem;
+  background: linear-gradient(135deg, rgba(108,114,203,0.12) 0%, rgba(155,109,255,0.08) 50%, rgba(56,189,248,0.06) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--blue), var(--purple), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+.hero p { color: var(--text2); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.hero-stat { text-align: center; }
+.hero-stat .num { font-size: 1.8rem; font-weight: 700; color: var(--purple); }
+.hero-stat .label { font-size: 0.8rem; color: var(--muted); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--blue);
+  box-shadow: 0 8px 30px rgba(108,114,203,0.15);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card:hover::before { opacity: 1; }
+
+.card-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 0.75rem;
+}
+.card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+.card p { font-size: 0.85rem; color: var(--text2); line-height: 1.6; }
+.card-arrow {
+  position: absolute;
+  bottom: 1.25rem; right: 1.25rem;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+  transition: 0.2s;
+}
+.card:hover .card-arrow { background: var(--blue); color: #fff; }
+
+.tag-intro { background: rgba(108,114,203,0.15); color: var(--blue); }
+.tag-arch { background: rgba(56,189,248,0.15); color: var(--cyan); }
+.tag-model { background: rgba(155,109,255,0.15); color: var(--purple); }
+.tag-erd { background: rgba(52,211,153,0.15); color: var(--green); }
+
+.footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 1.6rem; }
+  .cards { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>DBMS Learning Hub</h1>
+  <p>รวมบทเรียน Database Management Systems ทั้งหมด เลือกบทเรียนที่ต้องการเพื่อเริ่มเรียนได้เลย</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">6</div><div class="label">บทเรียน</div></div>
+    <div class="hero-stat"><div class="num">6</div><div class="label">หัวข้อหลัก</div></div>
+    <div class="hero-stat"><div class="num">∞</div><div class="label">ความรู้</div></div>
+  </div>
+</div>
+
+<div class="container">
+  <h2 class="section-title">บทเรียนทั้งหมด</h2>
+  <div class="cards">
+
+    <a href="SQL1.html" class="card">
+      <span class="card-tag tag-intro">1.1</span>
+      <h3>Introduction to DBMS</h3>
+      <p>ภาพรวมของระบบจัดการฐานข้อมูล แนวคิดพื้นฐาน ประเภทของ DBMS และองค์ประกอบที่สำคัญ</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="SQL1_2.html" class="card">
+      <span class="card-tag tag-intro">1.2</span>
+      <h3>องค์ประกอบ DBMS & สายอาชีพ</h3>
+      <p>องค์ประกอบของ DBMS ข้อมูลแบบ Sparse/Dense และสายอาชีพที่เกี่ยวข้อง</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="SQL2.html" class="card">
+      <span class="card-tag tag-arch">1.3</span>
+      <h3>Database Systems & Architecture</h3>
+      <p>สถาปัตยกรรมฐานข้อมูล 3 ชั้น องค์ประกอบ 5 ประการ หน้าที่ของ DBMS และโครงสร้างข้อมูล</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="SQL3.html" class="card">
+      <span class="card-tag tag-model">2.1</span>
+      <h3>Data Modeling</h3>
+      <p>แนวคิด Data Modeling กระบวนการสร้างฐานข้อมูล Building Blocks และวิวัฒนาการ Data Models</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="SQL4.html" class="card">
+      <span class="card-tag tag-erd">3.1</span>
+      <h3>ERD & EER Diagram</h3>
+      <p>โครงสร้าง ERD ชนิด Entity/Attribute Constraints Degree of Relationship และ EER Diagram</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="SQL4.2.html" class="card">
+      <span class="card-tag tag-erd">3.2</span>
+      <h3>ER & EER Modeling</h3>
+      <p>Entity Attribute Relationship Chen vs Crow's Foot Participation และการสร้าง M:N Relationship</p>
+      <div class="card-arrow">→</div>
+    </a>
+
+  </div>
+</div>
+
+<div class="footer">DBMS Learning Hub — บทเรียน DBMS ทั้งหมดรวมอยู่ที่นี่</div>
+
+</body>
+</html>
